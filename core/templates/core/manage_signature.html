@@ -1,0 +1,32 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Gestionar mi Firma</h2>
+
+                {% if user_signature and user_signature.image %}
+                    <p>Tu firma actual:</p>
+                    <div class="text-center p-3 mb-3" style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: .25rem;">
+                        <img src="{{ user_signature.image.url }}" alt="Firma actual" class="img-fluid" style="max-height: 150px;">
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">Aún no has subido una firma.</div>
+                {% endif %}
+
+                <p>Para cambiarla o subir una nueva, selecciona un archivo:</p>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary mt-3">Guardar Firma</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

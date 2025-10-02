@@ -1,0 +1,208 @@
+{% extends "core/base.html" %}
+
+{% block page_content %}
+    <h2 class="mb-3">Firmar Documento: {{ document.title }}</h2>
+
+    <div class="row">
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="zoom-controls">
+                        <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Alejar">
+                            <i class="bi bi-zoom-out"></i>
+                        </button>
+                        <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Acercar">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+                        <button id="zoom-reset" class="btn btn-outline-secondary btn-sm" title="Restablecer Zoom">
+                            <i class="bi bi-aspect-ratio"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="pagination-controls d-flex align-items-center">
+                        <button id="prev-page" class="btn btn-outline-secondary btn-sm me-3">
+                            <i class="bi bi-arrow-left"></i> Anterior
+                        </button>
+                        <span id="page-num" class="fw-bold">0</span> / <span id="page-count">{{ num_pages }}</span>
+                        <button id="next-page" class="btn btn-outline-secondary btn-sm ms-3">
+                            Siguiente <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="zoom-controls-placeholder" style="visibility: hidden;">
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-zoom-out"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-zoom-in"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-aspect-ratio"></i></button>
+                    </div>
+                </div>
+
+                <div class="card-body p-3" id="pdf-container" style="height: 80vh; position: relative; background-color: #f0f2f5; overflow: auto;">
+                    </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Controles</h5>
+                    <p class="text-muted">Arrastra tu firma para posicionarla. Puedes cambiar su tamaño desde las esquinas.</p>
+                    <div class="d-grid gap-2">
+                        <button id="save-btn" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Guardar Firma
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-lg"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+    <script src="https://unpkg.com/konva@8.3.14/konva.min.js"></script>
+
+    <script>
+        // Variables globales
+        const pdfUrl = "{{ document.original_file.url }}";
+        const signatureUrl = "{{ signature_url }}";
+        const saveUrl = "{% url 'api_save_signature' pk=document.pk %}";
+        const csrfToken = "{{ csrf_token }}";
+        const totalPages = {{ num_pages }};
+
+        let pdfDoc = null;
+        let currentPageNum = 1;
+        let signatureImageNode = null;
+        let transformerNode = null;
+        let konvaStage = null;
+        
+        let currentScale = 1.0;
+        let initialScale = 1.0;
+
+        // Elementos del DOM
+        const pdfContainer = document.getElementById('pdf-container');
+        const pageNumDisplay = document.getElementById('page-num');
+        const saveButton = document.getElementById('save-btn');
+        const prevButton = document.getElementById('prev-page');
+        const nextButton = document.getElementById('next-page');
+        const zoomInButton = document.getElementById('zoom-in');
+        const zoomOutButton = document.getElementById('zoom-out');
+        const zoomResetButton = document.getElementById('zoom-reset');
+
+        // Configuración de PDF.js
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`;
+
+        // Lógica Principal
+        Promise.all([
+            pdfjsLib.getDocument(pdfUrl).promise,
+            new Promise((resolve) => Konva.Image.fromURL(signatureUrl, resolve))
+        ]).then(([pdf, imageNode]) => {
+            pdfDoc = pdf;
+            
+            signatureImageNode = imageNode;
+            signatureImageNode.setAttrs({ x: 50, y: 50, width: 150, height: 75, draggable: true });
+            transformerNode = new Konva.Transformer({ node: signatureImageNode, keepRatio: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'] });
+
+            return pdfDoc.getPage(1);
+        }).then(page => {
+            const desiredHeight = pdfContainer.clientHeight - 30; // -30 para un pequeño margen
+            const viewport = page.getViewport({ scale: 1 });
+            initialScale = desiredHeight / viewport.height;
+            currentScale = initialScale;
+            renderPage(currentPageNum);
+        }).catch(console.error);
+
+        function renderPage(num) {
+            pdfContainer.innerHTML = '';
+            
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({ scale: currentScale });
+
+                // Crear un wrapper para centrar el contenido si es más pequeño que el contenedor
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = `${viewport.width}px`;
+                wrapper.style.height = `${viewport.height}px`;
+
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                canvas.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                
+                const konvaContainer = document.createElement('div');
+                konvaContainer.id = 'editor-konva';
+                konvaContainer.style.position = 'absolute';
+                konvaContainer.style.top = '0';
+                konvaContainer.style.left = '0';
+                konvaContainer.style.width = `${viewport.width}px`;
+                konvaContainer.style.height = `${viewport.height}px`;
+
+                wrapper.appendChild(canvas);
+                wrapper.appendChild(konvaContainer);
+                pdfContainer.appendChild(wrapper);
+
+                const renderContext = { canvasContext: context, viewport: viewport };
+                page.render(renderContext).promise.then(() => {
+                    konvaStage = new Konva.Stage({ container: konvaContainer, width: viewport.width, height: viewport.height });
+                    const layer = new Konva.Layer();
+                    konvaStage.add(layer);
+                    if (signatureImageNode) {
+                        layer.add(signatureImageNode);
+                        layer.add(transformerNode);
+                    }
+                });
+            });
+
+            currentPageNum = num;
+            pageNumDisplay.textContent = currentPageNum;
+            prevButton.disabled = (currentPageNum <= 1);
+            nextButton.disabled = (currentPageNum >= totalPages);
+        }
+
+        // Event Listeners para los botones
+        prevButton.addEventListener('click', () => (currentPageNum > 1) && renderPage(currentPageNum - 1));
+        nextButton.addEventListener('click', () => (currentPageNum < totalPages) && renderPage(currentPageNum + 1));
+        
+        zoomInButton.addEventListener('click', () => { currentScale += 0.2; renderPage(currentPageNum); });
+        zoomOutButton.addEventListener('click', () => { if (currentScale > 0.3) { currentScale -= 0.2; renderPage(currentPageNum); } });
+        zoomResetButton.addEventListener('click', () => { currentScale = initialScale; renderPage(currentPageNum); });
+        
+        saveButton.addEventListener('click', () => {
+            if (!signatureImageNode || !konvaStage) { alert('El editor no ha cargado completamente.'); return; }
+            const konvaContainer = konvaStage.container();
+            const data = {
+                x: signatureImageNode.x(),
+                y: signatureImageNode.y(),
+                width: signatureImageNode.width() * signatureImageNode.scaleX(),
+                height: signatureImageNode.height() * signatureImageNode.scaleY(),
+                rotation: signatureImageNode.rotation(),
+                page_width: konvaContainer.offsetWidth,
+                page_height: konvaContainer.offsetHeight,
+                page_number: currentPageNum,
+            };
+            if (data.page_width === 0 || data.page_height === 0) {
+                alert('Error: Las dimensiones del editor son cero. Por favor, intente recargar la página.');
+                return;
+            }
+            fetch(saveUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert('¡Documento firmado con éxito!');
+                    window.location.href = "{% url 'dashboard' %}";
+                } else {
+                    alert('Error al firmar el documento: ' + result.message);
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error de conexión.');
+            });
+        });
+    </script>
+{% endblock %}

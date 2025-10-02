@@ -1,0 +1,94 @@
+/* core/static/core/css/custom.css (Versión oficial USC) */
+
+/* 1. Definimos la paleta de colores oficial de la USC */
+:root {
+    --usc-blue: #003774;          /* Azul principal (Pantone 294) */
+    --usc-accent-orange: #B56014;  /* Naranja cálido (del logo) */
+    --usc-hover-blue: #026466;     /* Azul secundario "Blue Stone" (para hovers) */
+    --usc-light-gray: #f8f9fa;     /* Gris claro estándar de Bootstrap para fondos */
+    --white: #FFFFFF;
+    --text-dark: #212529;
+}
+
+/* 2. Estilos Generales */
+body {
+    background-color: var(--usc-light-gray);
+    color: var(--text-dark);
+}
+
+/* 3. Barra de Navegación (Navbar) */
+.navbar-custom {
+    background-color: var(--usc-blue);
+}
+.navbar-custom .navbar-brand,
+.navbar-custom .navbar-nav .nav-link,
+.navbar-custom .navbar-text {
+    color: var(--white);
+    transition: color 0.2s ease-in-out;
+}
+.navbar-custom .nav-link:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* 4. Botones */
+
+/* -- Botón Primario (Azul USC) -- */
+.btn-primary {
+    background-color: var(--usc-blue);
+    border-color: var(--usc-blue);
+    color: var(--white);
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: var(--usc-hover-blue);
+    border-color: var(--usc-hover-blue);
+    color: var(--white);
+}
+
+/* -- Botón Secundario (Gris oscuro) -- */
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: var(--white);
+}
+.btn-secondary:hover, .btn-secondary:focus, .btn-secondary:active {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: var(--white);
+}
+
+/* -- Botón de Éxito / Acento (Naranja cálido) -- */
+.btn-success, .btn-accent {
+    background-color: var(--usc-accent-orange);
+    border-color: var(--usc-accent-orange);
+    color: var(--white);
+}
+.btn-success:hover, .btn-success:focus, .btn-success:active,
+.btn-accent:hover, .btn-accent:focus, .btn-accent:active {
+    background-color: #d17018; /* Naranja más oscuro */
+    border-color: #d17018;
+    color: var(--white);
+}
+
+/* 5. Enlaces */
+a {
+    color: var(--usc-blue);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+a:hover {
+    color: var(--usc-accent-orange);
+    text-decoration: underline;
+}
+
+/* 6. Tarjetas y Listas (Cards) */
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+/* 7. Alertas (Mensajes de Django) */
+.alert-info {
+    background-color: #e0e9f2;
+    border-color: var(--usc-blue);
+    color: var(--usc-blue);
+}

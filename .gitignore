@@ -1,0 +1,24 @@
+# Entorno Virtual
+venv/
+env/
+.venv/
+
+# Archivos de Python compilados
+__pycache__/
+*.pyc
+
+# Archivo de entorno con secretos
+.env
+
+# Base de datos de desarrollo
+*.sqlite3
+db.sqlite3
+
+# Archivos subidos por los usuarios
+media/
+
+# Archivos estáticos recolectados para producción
+staticfiles/
+
+# Otros
+.DS_Store

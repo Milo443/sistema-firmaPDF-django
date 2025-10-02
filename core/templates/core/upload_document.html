@@ -1,0 +1,86 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Subir Nuevo Documento</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div id="pdf-preview-container" class="mt-4" style="display: none;">
+                        <h6>Vista Previa (Primera Página):</h6>
+                        <div class="d-flex justify-content-center p-3" style="background-color: #f0f2f5; border: 1px solid #dee2e6; border-radius: .25rem;">
+                            <canvas id="pdf-preview-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="bi bi-upload"></i> Subir Documento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
+
+<script>
+    // Configurar el "worker" de PDF.js
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`;
+
+    // Obtener referencias a los elementos del DOM
+    // 'id_original_file' es el ID que Django y Crispy Forms le asignan por defecto al campo de subida de archivo
+    const fileInput = document.getElementById('id_original_file'); 
+    const previewContainer = document.getElementById('pdf-preview-container');
+    const previewCanvas = document.getElementById('pdf-preview-canvas');
+
+    // Escuchar el evento 'change' en el campo de archivo
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+
+        // Asegurarse de que se seleccionó un archivo y es un PDF
+        if (file && file.type === 'application/pdf') {
+            previewContainer.style.display = 'block'; // Mostrar el contenedor de la vista previa
+
+            // Usar la API FileReader para leer el archivo desde el navegador
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const pdfData = new Uint8Array(e.target.result);
+                
+                // Usar PDF.js para renderizar la primera página
+                pdfjsLib.getDocument({ data: pdfData }).promise.then(pdf => {
+                    return pdf.getPage(1); // Obtener la primera página
+                }).then(page => {
+                    const containerWidth = previewContainer.querySelector('div').clientWidth;
+                    const viewport = page.getViewport({ scale: 1 });
+                    const scale = (containerWidth - 30) / viewport.width; // Ajustar al ancho del contenedor
+                    const scaledViewport = page.getViewport({ scale: scale });
+                    
+                    const context = previewCanvas.getContext('2d');
+                    previewCanvas.height = scaledViewport.height;
+                    previewCanvas.width = scaledViewport.width;
+                    
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: scaledViewport
+                    };
+                    page.render(renderContext);
+                });
+            };
+            // Iniciar la lectura del archivo
+            reader.readAsArrayBuffer(file);
+
+        } else {
+            // Ocultar la vista previa si no se selecciona un PDF
+            previewContainer.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

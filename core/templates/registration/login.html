@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Iniciar Sesión</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'login_redirect' %}">
+
+                    {{ form|crispy }}
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary mt-3">Ingresar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
