@@ -53,5 +53,101 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Selecciona todos los botones con la clase 'btn-rasterizar'
+        const rasterizeButtons = document.querySelectorAll('.btn-rasterizar');
+        
+        // Obtén el token CSRF para la petición. Es crucial para la seguridad de Django.
+        const csrftoken = getCookie('csrftoken');
+
+        // Itera sobre cada botón y añade el evento 'click'
+        rasterizeButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); 
+                
+                const documentId = this.dataset.documentId;
+                const listItem = this.closest('.list-group-item');
+                const statusElement = listItem.querySelector('small strong');
+                
+                // Guarda el texto original del botón para restaurarlo en caso de error
+                const originalText = this.innerHTML;
+                
+                // Muestra un indicador de carga y deshabilita el botón
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Rasterizando...';
+                this.disabled = true;
+
+                // Llama a la URL de la vista de Django
+                fetch(`/api/documents/${documentId}/rasterize/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    },
+                    // No se necesita body para esta petición, ya que el ID va en la URL
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // Si el servidor responde con un error HTTP, lo lanza
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || 'Error desconocido.');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Reemplazar el botón con el nuevo enlace de descarga
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = data.download_url;
+                        downloadLink.className = 'btn btn-sm btn-success';
+                        downloadLink.download = true; // Forzar la descarga
+                        downloadLink.innerHTML = '<i class="bi bi-download"></i> Descargar Aplanado';
+                        
+                        this.replaceWith(downloadLink); // Reemplaza el botón por el enlace
+
+                        // Actualiza el estado del texto en la lista para que sea visible
+                        if (statusElement) {
+                            statusElement.innerText = 'Aplanado/Rasterizado';
+                        }
+                        
+                        // Muestra un mensaje global de éxito
+                        const statusMessage = document.getElementById('statusMessage');
+                        statusMessage.innerHTML = `<div class="alert alert-success" role="alert">Documento '${documentId}' rasterizado exitosamente.</div>`;
+                        
+                    } else {
+                        // Si la respuesta es JSON pero con un estado de error
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    // Maneja cualquier error de red o de la petición
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                    const statusMessage = document.getElementById('statusMessage');
+                    statusMessage.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${error.message}</div>`;
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        // Función auxiliar para obtener el token CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script> -->
 </body>
 </html>
