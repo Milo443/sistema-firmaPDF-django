@@ -76,6 +76,7 @@ def manage_signature(request):
         user_signature = None
 
     if request.method == 'POST':
+        #solo formato png
         form = SignatureForm(request.POST, request.FILES, instance=user_signature)
         if form.is_valid():
             signature = form.save(commit=False)
