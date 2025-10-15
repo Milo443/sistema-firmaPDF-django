@@ -5,12 +5,17 @@ from .models import Document, Signature
 from django.core.validators import FileExtensionValidator
 
 class DocumentForm(forms.ModelForm):
+    original_file = forms.FileField(
+        label='Seleccionar archivo PDF',
+        validators=[FileExtensionValidator(allowed_extensions=['pdf'])],
+        widget=forms.ClearableFileInput(attrs={'accept': 'application/pdf'})
+    )
+
     class Meta:
         model = Document
         fields = ['title', 'original_file']
         labels = {
-            'title': 'Título del Documento',
-            'original_file': 'Seleccionar archivo PDF',
+            'title': 'Título del Documento'
         }
 
 class SignatureForm(forms.ModelForm):
