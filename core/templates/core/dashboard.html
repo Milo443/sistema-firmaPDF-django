@@ -17,14 +17,19 @@
                         <small class="text-muted">Estado: <strong>{{ document.get_status_display }}</strong> | Subido: {{ document.created_at|date:"d M Y, P" }}</small>
                     </div>
                     <div>
+    
                         {% if document.status == 'flattened' %}
                             <a href="{{ document.signed_file.url }}" class="btn btn-sm btn-success" download>
-                                <i class="bi bi-download"></i> Descargar Aplanado
+                                <i class="bi bi-download"></i> Descargar Firmado
                             </a>
                         {% elif document.status == 'signed' %}
-                            <button class="btn btn-sm btn-primary btn-rasterizar" data-document-id="{{ document.pk }}">
+                            <a href="{{ document.signed_file.url }}" class="btn btn-sm btn-success" download>
+                                <i class="bi bi-download"></i> Descargar Firmado
+                            </a>
+
+                            {% comment %} <button class="btn btn-sm btn-primary btn-rasterizar" data-document-id="{{ document.pk }}">
                                 <i class="bi bi-pass-fill"></i> Aplanar
-                            </button>
+                            </button> {% endcomment %}
                         {% elif document.status == 'uploaded' %}
                             <a href="{% url 'sign_document_editor' pk=document.pk %}" class="btn btn-sm btn-secondary">
                                 <i class="bi bi-pencil-fill"></i> Firmar
