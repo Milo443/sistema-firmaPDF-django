@@ -5,6 +5,10 @@ services:
     container_name: firma-pdf-django
     restart: always
 
+    # Mapeo de puertos (acceso directo o via proxy)
+    ports:
+      - "8000:8000"
+
     # Conexión a la red de tu Nginx Proxy (asegúrate de que exista en la VPS)
     networks:
       - web_network

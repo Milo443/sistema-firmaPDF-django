@@ -31,6 +31,12 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['firma-ing.vooltlab.com', 'localhost', '127.0.0.1']
 
+# Configuración necesaria para HTTPS y Proxies (Nginx) en producción
+CSRF_TRUSTED_ORIGINS = ['https://firma-ing.vooltlab.com']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+SECURE_SSL_REDIRECT = False # Dejar en False si Nginx ya hace el redirect
+
 
 # Application definition
 
