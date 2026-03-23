@@ -1,74 +1,144 @@
 {% extends "core/base.html" %}
 
 {% block page_content %}
-    <h2 class="mb-3">Firmar Documento: {{ document.title }}</h2>
-
-    <div class="row">
-        <div class="col-md-9">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="zoom-controls">
-                        <button id="zoom-out" class="btn btn-outline-secondary btn-sm" title="Alejar">
-                            <i class="bi bi-zoom-out"></i>
-                        </button>
-                        <button id="zoom-in" class="btn btn-outline-secondary btn-sm" title="Acercar">
-                            <i class="bi bi-zoom-in"></i>
-                        </button>
-                        <button id="zoom-reset" class="btn btn-outline-secondary btn-sm" title="Restablecer Zoom">
-                            <i class="bi bi-aspect-ratio"></i>
-                        </button>
+    <div class="flex flex-col lg:flex-row gap-6 h-[calc(100vh-160px)]" x-data="{ loaded: false, showHelp: window.innerWidth > 1024 }" x-init="setTimeout(() => loaded = true, 50)">
+        <!-- Main Editor Area -->
+        <div 
+            class="flex-grow flex flex-col glass-card overflow-hidden transition-all duration-700 transform"
+            x-show="loaded"
+            x-transition:enter="transition ease-out duration-700"
+            x-transition:enter-start="opacity-0 translate-x-[-20px]"
+            x-transition:enter-end="opacity-100 translate-x-0"
+        >
+            <!-- Editor Toolbar -->
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary-600 text-white p-2 rounded-lg shadow-lg">
+                        <i class="pi pi-pencil"></i>
                     </div>
-                    
-                    <div class="pagination-controls d-flex align-items-center">
-                        <button id="prev-page" class="btn btn-outline-secondary btn-sm me-3">
-                            <i class="bi bi-arrow-left"></i> Anterior
-                        </button>
-                        <span id="page-num" class="fw-bold">0</span> / <span id="page-count">{{ num_pages }}</span>
-                        <button id="next-page" class="btn btn-outline-secondary btn-sm ms-3">
-                            Siguiente <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
-
-                    <div class="zoom-controls-placeholder" style="visibility: hidden;">
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-zoom-out"></i></button>
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-zoom-in"></i></button>
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-aspect-ratio"></i></button>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[150px] md:max-w-[300px]" title="{{ document.title }}">
+                            {{ document.title }}
+                        </h2>
+                        <span class="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Editor de Firma</span>
                     </div>
                 </div>
 
-                <div class="card-body p-3" id="pdf-container" style="height: 80vh; position: relative; background-color: #f0f2f5; overflow: auto;">
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <button id="zoom-out" class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-300 transition-all active:scale-90" title="Alejar">
+                        <i class="pi pi-minus"></i>
+                    </button>
+                    <div class="px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">Zoom</div>
+                    <button id="zoom-in" class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-300 transition-all active:scale-90" title="Acercar">
+                        <i class="pi pi-plus"></i>
+                    </button>
+                    <div class="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                    <button id="zoom-reset" class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-300 transition-all active:scale-90" title="Restablecer">
+                        <i class="pi pi-refresh"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="prev-page" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-30 transition-all shadow-sm">
+                        <i class="pi pi-chevron-left"></i>
+                    </button>
+                    <div class="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border-2 border-primary-500/20 text-sm font-bold flex items-center gap-2">
+                        <span id="page-num" class="text-primary-600 dark:text-primary-400">0</span>
+                        <span class="text-slate-300">/</span>
+                        <span id="page-count" class="text-slate-500">{{ num_pages }}</span>
                     </div>
+                    <button id="next-page" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-30 transition-all shadow-sm">
+                        <i class="pi pi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PDF Canvas Area -->
+            <div id="pdf-container" class="flex-grow overflow-auto bg-slate-200 dark:bg-slate-950 p-10 flex justify-center items-start custom-scrollbar relative">
+                <div class="flex flex-col items-center justify-center h-full w-full text-slate-400">
+                    <i class="pi pi-spin pi-spinner text-3xl mb-4"></i>
+                    <p class="font-bold text-sm uppercase tracking-widest animate-pulse">Cargando documento...</p>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Controles</h5>
-                    <p class="text-muted">Arrastra tu firma para posicionarla. Puedes cambiar su tamaño desde las esquinas.</p>
-                    <div class="d-grid gap-2">
-                        <button id="save-btn" class="btn btn-success">
-                            <i class="bi bi-check-lg"></i> Guardar Firma
-                        </button>
-                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
-                            <i class="bi bi-x-lg"></i> Cancelar
-                        </a>
+        <!-- Sidebar Controls -->
+        <div 
+            class="w-full lg:w-80 flex flex-col gap-6 transition-all duration-700 transform"
+            x-show="loaded"
+            x-transition:enter="transition ease-out duration-700 delay-100"
+            x-transition:enter-start="opacity-0 translate-x-[20px]"
+            x-transition:enter-end="opacity-100 translate-x-0"
+        >
+            <div class="glass-card p-6 border-primary-500/10 shadow-2xl shadow-primary-500/5">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+                    <i class="pi pi-check-circle text-primary-500 text-xl"></i>
+                    Finalizar Firma
+                </h3>
+                
+                <div class="space-y-4 mb-8">
+                    <button id="save-btn" class="btn-primary w-full py-4 flex items-center justify-center gap-3 text-lg font-bold group shadow-2xl">
+                        <i class="pi pi-save text-xl transition-transform group-hover:scale-110"></i>
+                        <span>Guardar Firma</span>
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="flex items-center justify-center gap-2 w-full py-3 text-slate-500 hover:text-red-500 transition-colors font-bold text-sm">
+                        <i class="pi pi-times"></i>
+                        <span>Cancelar edicion</span>
+                    </a>
+                </div>
+
+                <button 
+                    @click="showHelp = !showHelp" 
+                    class="w-full py-3 px-4 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                    <span>Instrucciones</span>
+                    <i class="pi transition-transform" :class="showHelp ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </button>
+            </div>
+
+            <div 
+                class="glass-card p-6 flex-grow overflow-hidden"
+                x-show="showHelp"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 -translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0"
+            >
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0 text-primary-600 dark:text-primary-400 font-bold text-xs">1</div>
+                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-medium">Arrastra tu firma para posicionarla sobre el documento.</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0 text-primary-600 dark:text-primary-400 font-bold text-xs">2</div>
+                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-medium">Usa las esquinas para ajustar el tamaño de la firma.</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0 text-primary-600 dark:text-primary-400 font-bold text-xs">3</div>
+                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400 font-medium">Navega entre páginas si el documento tiene más de una.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
+                        <i class="pi pi-shield text-lg shadow-sm"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-widest">Documento Protegido</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block extra_js %}
     <script src="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js"></script>
     <script src="https://unpkg.com/konva@8.3.14/konva.min.js"></script>
-
     <script>
         // Variables globales
         const pdfUrl = "{{ document.original_file.url }}";
         const signatureUrl = "{{ signature_url }}";
         const saveUrl = "{% url 'api_save_signature' pk=document.pk %}";
         const csrfToken = "{{ csrf_token }}";
-        const totalPages = {{ num_pages }};
+        const totalPages = parseInt("{{ num_pages }}") || 0;
 
         let pdfDoc = null;
         let currentPageNum = 1;
@@ -90,38 +160,58 @@
         const zoomResetButton = document.getElementById('zoom-reset');
 
         // Configuración de PDF.js
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`;
+        const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+        if (pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`;
+        }
 
-        // Lógica Principal
+        // Lógica de carga
         Promise.all([
             pdfjsLib.getDocument(pdfUrl).promise,
-            new Promise((resolve) => Konva.Image.fromURL(signatureUrl, resolve))
+            new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => Konva.Image.fromURL(signatureUrl, resolve);
+                img.onerror = () => reject(new Error("Error al cargar la firma"));
+                img.src = signatureUrl;
+                setTimeout(() => reject(new Error("Timeout cargando firma")), 10000);
+            })
         ]).then(([pdf, imageNode]) => {
             pdfDoc = pdf;
-            
             signatureImageNode = imageNode;
             signatureImageNode.setAttrs({ x: 50, y: 50, width: 150, height: 75, draggable: true });
-            transformerNode = new Konva.Transformer({ node: signatureImageNode, keepRatio: true, enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'] });
+            
+            transformerNode = new Konva.Transformer({ 
+                node: signatureImageNode, 
+                keepRatio: true, 
+                enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+                borderStroke: '#003774',
+                anchorFill: '#ffffff',
+                anchorStroke: '#003774',
+                anchorSize: 10,
+                borderDash: [5, 5]
+            });
 
             return pdfDoc.getPage(1);
         }).then(page => {
-            const desiredHeight = pdfContainer.clientHeight - 30; // -30 para un pequeño margen
+            const desiredHeight = pdfContainer.clientHeight - 80;
             const viewport = page.getViewport({ scale: 1 });
-            initialScale = desiredHeight / viewport.height;
+            initialScale = Math.min(desiredHeight / viewport.height, (pdfContainer.clientWidth - 100) / viewport.width);
             currentScale = initialScale;
             renderPage(currentPageNum);
-        }).catch(console.error);
+        }).catch(err => {
+            showToast('Error', err.message, 'error');
+            console.error(err);
+        });
 
         function renderPage(num) {
-            pdfContainer.innerHTML = '';
+            pdfContainer.innerHTML = '<div class="flex flex-col items-center justify-center p-8 text-slate-400 font-bold text-xs uppercase tracking-widest"><i class="pi pi-spin pi-spinner mb-4 text-2xl"></i> Renderizando...</div>';
             
             pdfDoc.getPage(num).then(page => {
+                pdfContainer.innerHTML = '';
                 const viewport = page.getViewport({ scale: currentScale });
 
-                // Crear un wrapper para centrar el contenido si es más pequeño que el contenedor
                 const wrapper = document.createElement('div');
-                wrapper.style.position = 'relative';
+                wrapper.className = "relative shadow-2xl origin-top bg-white rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700";
                 wrapper.style.width = `${viewport.width}px`;
                 wrapper.style.height = `${viewport.height}px`;
 
@@ -129,15 +219,10 @@
                 const context = canvas.getContext('2d');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
-                canvas.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
                 
                 const konvaContainer = document.createElement('div');
                 konvaContainer.id = 'editor-konva';
-                konvaContainer.style.position = 'absolute';
-                konvaContainer.style.top = '0';
-                konvaContainer.style.left = '0';
-                konvaContainer.style.width = `${viewport.width}px`;
-                konvaContainer.style.height = `${viewport.height}px`;
+                konvaContainer.className = "absolute top-0 left-0 w-full h-full cursor-crosshair";
 
                 wrapper.appendChild(canvas);
                 wrapper.appendChild(konvaContainer);
@@ -161,16 +246,18 @@
             nextButton.disabled = (currentPageNum >= totalPages);
         }
 
-        // Event Listeners para los botones
+        // Event Listeners
         prevButton.addEventListener('click', () => (currentPageNum > 1) && renderPage(currentPageNum - 1));
         nextButton.addEventListener('click', () => (currentPageNum < totalPages) && renderPage(currentPageNum + 1));
-        
         zoomInButton.addEventListener('click', () => { currentScale += 0.2; renderPage(currentPageNum); });
         zoomOutButton.addEventListener('click', () => { if (currentScale > 0.3) { currentScale -= 0.2; renderPage(currentPageNum); } });
         zoomResetButton.addEventListener('click', () => { currentScale = initialScale; renderPage(currentPageNum); });
         
         saveButton.addEventListener('click', () => {
-            if (!signatureImageNode || !konvaStage) { alert('El editor no ha cargado completamente.'); return; }
+            if (!signatureImageNode || !konvaStage) return;
+            saveButton.innerHTML = '<i class="pi pi-spin pi-spinner mr-2"></i> Procesando...';
+            saveButton.disabled = true;
+
             const konvaContainer = konvaStage.container();
             const data = {
                 x: signatureImageNode.x(),
@@ -182,27 +269,36 @@
                 page_height: konvaContainer.offsetHeight,
                 page_number: currentPageNum,
             };
-            if (data.page_width === 0 || data.page_height === 0) {
-                alert('Error: Las dimensiones del editor son cero. Por favor, intente recargar la página.');
-                return;
-            }
+
             fetch(saveUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
                 body: JSON.stringify(data),
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(result => {
                 if (result.status === 'success') {
-                    alert('¡Documento firmado con éxito!');
-                    window.location.href = "{% url 'dashboard' %}";
+                    showToast('¡Éxito!', 'Documento firmado correctamente', 'success');
+                    setTimeout(() => window.location.href = "{% url 'dashboard' %}", 1200);
                 } else {
-                    alert('Error al firmar el documento: ' + result.message);
+                    saveButton.innerHTML = '<i class="pi pi-save mr-2"></i> Guardar Firma';
+                    saveButton.disabled = false;
+                    showToast('Error', result.message, 'error');
                 }
-            }).catch(error => {
-                console.error('Error:', error);
-                alert('Ocurrió un error de conexión.');
+            }).catch(err => {
+                saveButton.innerHTML = '<i class="pi pi-save mr-2"></i> Guardar Firma';
+                saveButton.disabled = false;
+                showToast('Error', 'Error de conexión', 'error');
             });
         });
     </script>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-700/50 rounded-full border-2 border-transparent bg-clip-padding; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { @apply bg-slate-400 dark:bg-slate-600; }
+    </style>
 {% endblock %}

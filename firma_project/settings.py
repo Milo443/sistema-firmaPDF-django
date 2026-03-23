@@ -35,6 +35,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'core',
+    'unfold', # <-- ANTES que admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',         
     'crispy_bootstrap5',     
-    'core',
 ]
 
 MIDDLEWARE = [
@@ -110,9 +111,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-es'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Bogota'
 
 USE_I18N = True
 
@@ -140,3 +141,33 @@ LOGOUT_REDIRECT_URL = '/'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# --- Configuración de Django Unfold ---
+UNFOLD = {
+    "SITE_TITLE": "FirmING Admin",
+    "SITE_HEADER": "FirmING",
+    "SITE_URL": "/",
+    "SITE_ICON": {
+        "light": lambda request: "/static/core/img/logo.png", # Opcional si tienes logo
+        "dark": lambda request: "/static/core/img/logo.png",
+    },
+    "COLORS": {
+        "primary": {
+            "50": "240 245 250",
+            "100": "225 234 245",
+            "200": "194 213 235",
+            "300": "148 181 219",
+            "400": "95 140 196",
+            "500": "0 55 116", # USC Blue (0, 55, 116)
+            "600": "0 46 97",
+            "700": "0 38 79",
+            "800": "0 30 62",
+            "900": "0 20 43",
+            "950": "0 10 22",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+    },
+}

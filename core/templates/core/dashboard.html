@@ -1,41 +1,74 @@
 {% extends "core/base.html" %}
 
 {% block page_content %}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Panel de Control</h2>
-        <a href="{% url 'upload_document' %}" class="btn btn-primary">
-            <i class="bi bi-file-earmark-plus"></i> Subir Documento
+<div x-data="{ loaded: false }" x-init="setTimeout(() => loaded = true, 50)">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+         x-show="loaded"
+         x-transition:enter="transition ease-out duration-500"
+         x-transition:enter-start="opacity-0 -translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Panel de Control</h1>
+            <p class="text-slate-500 dark:text-slate-400">Gestiona y firma tus documentos PDF de forma segura.</p>
+        </div>
+        <a href="{% url 'upload_document' %}" 
+           class="btn-primary flex items-center justify-center gap-2 py-3 px-6 transform transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary-500/20">
+            <i class="pi pi-file-plus"></i>
+            <span>Subir Documento</span>
         </a>
     </div>
 
     {% if documents %}
-        <div class="list-group">
+        <div class="grid gap-6">
             {% for document in documents %}
-                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-1">{{ document.title }}</h5>
-                        <small class="text-muted">Estado: <strong>{{ document.get_status_display }}</strong> | Subido: {{ document.created_at|date:"d M Y, P" }}</small>
+                <div 
+                    class="glass-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-300 hover:shadow-2xl group border-l-4"
+                    :class="{% if document.status == 'flattened' or document.status == 'signed' %}'border-emerald-500'{% else %}'border-amber-500'{% endif %}"
+                    x-show="loaded"
+                    x-transition:enter="transition ease-out duration-500"
+                    x-transition:enter-start="opacity-0 translate-y-8"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    style="transition-delay: {{ forloop.counter0|add:1 }}00ms"
+                >
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-primary-600 dark:text-primary-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors">
+                            <i class="pi pi-file-pdf text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ document.title }}</h3>
+                            <div class="flex flex-wrap items-center gap-4 text-sm">
+                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider {% if document.status == 'flattened' or document.status == 'signed' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400{% else %}bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400{% endif %}">
+                                    <span class="w-1.5 h-1.5 rounded-full {% if document.status == 'flattened' or document.status == 'signed' %}bg-emerald-500{% else %}bg-amber-500 animation-pulse{% endif %}"></span>
+                                    {{ document.get_status_display }}
+                                </span>
+                                <span class="text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                                    <i class="pi pi-calendar"></i>
+                                    {{ document.created_at|date:"d M Y, P" }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-    
-                        {% if document.status == 'flattened' %}
-                            <a href="{{ document.signed_file.url }}" class="btn btn-sm btn-success" download>
-                                <i class="bi bi-download"></i> Descargar Firmado
-                            </a>
-                        {% elif document.status == 'signed' %}
-                            <a href="{{ document.signed_file.url }}" class="btn btn-sm btn-success" download>
-                                <i class="bi bi-download"></i> Descargar Firmado
-                            </a>
 
-                            {% comment %} <button class="btn btn-sm btn-primary btn-rasterizar" data-document-id="{{ document.pk }}">
-                                <i class="bi bi-pass-fill"></i> Aplanar
-                            </button> {% endcomment %}
-                        {% elif document.status == 'uploaded' %}
-                            <a href="{% url 'sign_document_editor' pk=document.pk %}" class="btn btn-sm btn-secondary">
-                                <i class="bi bi-pencil-fill"></i> Firmar
+                    <div class="flex flex-wrap items-center gap-3">
+                        {% if document.status == 'flattened' or document.status == 'signed' %}
+                            <a href="{{ document.signed_file.url }}" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95" download>
+                                <i class="pi pi-download"></i>
+                                <span>Descargar PDF</span>
                             </a>
-                            <button class="btn btn-sm btn-primary btn-flatten-original" data-document-id="{{ document.pk }}">
-                                <i class="bi bi-pass-fill"></i> Aplanar Original
+                        {% elif document.status == 'uploaded' %}
+                            <a href="{% url 'sign_document_editor' pk=document.pk %}" class="btn-secondary flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-secondary-500/20">
+                                <i class="pi pi-pencil"></i>
+                                <span>Firmar Ahora</span>
+                            </a>
+                            <button 
+                                class="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm transition-all hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 btn-flatten-original" 
+                                data-document-id="{{ document.pk }}"
+                                x-data="{ processing: false }"
+                                @click="processing = true"
+                                :class="{ 'opacity-50 pointer-events-none': processing }"
+                            >
+                                <i class="pi" :class="processing ? 'pi-spin pi-spinner' : 'pi-box'"></i>
+                                <span x-text="processing ? 'Aplanando...' : 'Aplanar Original'"></span>
                             </button>
                         {% endif %}
                     </div>
@@ -43,54 +76,43 @@
             {% endfor %}
         </div>
     {% else %}
-        {% endif %}
-
-    <div id="statusMessage" class="mt-3"></div>
+        <div class="glass-card p-16 text-center"
+             x-show="loaded"
+             x-transition:enter="transition ease-out duration-700"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
+            <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800/50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-slate-400 border border-slate-200 dark:border-slate-700">
+                <i class="pi pi-folder-open text-4xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">No tienes documentos aún</h3>
+            <p class="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto text-lg">Sube tu primer archivo PDF para comenzar a firmar de forma segura.</p>
+            <a href="{% url 'upload_document' %}" class="btn-primary inline-flex items-center gap-3 px-8 py-4 text-lg rounded-2xl">
+                <i class="pi pi-plus"></i>
+                Subir mi primer documento
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const csrftoken = getCookie('csrftoken');
 
-        // --- Lógica para el botón de Rasterizar (documento firmado) ---
-        const rasterizeButtons = document.querySelectorAll('.btn-rasterizar');
-        rasterizeButtons.forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault(); 
-                const documentId = this.dataset.documentId;
-                // La URL usa ` para que ${documentId} se interprete correctamente
-                handleDocumentAction(this, documentId, `/api/documents/${documentId}/rasterize/`, 'Aplanado/Rasterizado', 'Descargar Aplanado', 'btn-success');
-            });
-        });
-
-        // --- Lógica para el botón de Aplanar Original (documento subido) ---
         const flattenOriginalButtons = document.querySelectorAll('.btn-flatten-original');
         flattenOriginalButtons.forEach(button => {
             button.addEventListener('click', function(event) {
                 event.preventDefault(); 
                 const documentId = this.dataset.documentId;
-                // La URL usa ` para que ${documentId} se interprete correctamente
-                handleDocumentAction(this, documentId, `/api/documents/${documentId}/flatten_original/`, 'Original Aplanado', 'Descargar Original Aplanado', 'btn-info');
+                handleDocumentAction(this, documentId, `/api/documents/${documentId}/flatten_original/`, 'Original Aplanado', 'Descargar PDF', 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20');
             });
         });
 
-        /**
-         * Función genérica para manejar las acciones del documento (rasterizar/aplanar).
-         * @param {HTMLElement} button - El botón que se hizo clic.
-         * @param {string} documentId - El ID del documento.
-         * @param {string} apiUrl - La URL de la API a la que se va a llamar.
-         * @param {string} newStatusText - El nuevo texto de estado para mostrar.
-         * @param {string} newButtonText - El nuevo texto para el botón de descarga.
-         * @param {string} newButtonClass - La nueva clase CSS del botón.
-         */
         function handleDocumentAction(button, documentId, apiUrl, newStatusText, newButtonText, newButtonClass) {
-            const listItem = button.closest('.list-group-item');
-            const statusElement = listItem.querySelector('small strong');
-            const originalText = button.innerHTML;
+            // El estado visual se maneja ahora via Alpine.js en el botón si quisiéramos, 
+            // pero para mantener la lógica de fetch centralizada:
             
-            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
-            button.disabled = true;
-
             fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -108,35 +130,35 @@
             })
             .then(data => {
                 if (data.status === 'success') {
-                    // Crea y configura el nuevo enlace de descarga
                     const downloadLink = document.createElement('a');
                     downloadLink.href = data.download_url;
-                    downloadLink.className = `btn btn-sm ${newButtonClass}`;
+                    downloadLink.className = `flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-bold text-sm transition-all hover:shadow-lg active:scale-95 ${newButtonClass}`;
                     downloadLink.download = true;
-                    downloadLink.innerHTML = `<i class="bi bi-download"></i> ${newButtonText}`;
+                    downloadLink.innerHTML = `<i class="pi pi-download"></i> <span>${newButtonText}</span>`;
                     
                     button.replaceWith(downloadLink);
 
-                    if (statusElement) {
-                        statusElement.innerText = newStatusText;
+                    const card = downloadLink.closest('.glass-card');
+                    const statusBadge = card.querySelector('span[class*="rounded-full"]');
+                    if (statusBadge) {
+                        statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ${newStatusText}`;
+                        statusBadge.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400';
                     }
                     
-                    const statusMessage = document.getElementById('statusMessage');
-                    statusMessage.innerHTML = `<div class="alert alert-success" role="alert">Documento '${documentId}' procesado exitosamente.</div>`;
+                    showToast('Éxito', `Documento procesado correctamente`, 'success');
                 } else {
                     throw new Error(data.message);
                 }
             })
             .catch(error => {
-                button.innerHTML = originalText;
-                button.disabled = false;
-                const statusMessage = document.getElementById('statusMessage');
-                statusMessage.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${error.message}</div>`;
+                // Si hay error comunicamos al usuario y reseteamos el estado si es necesario
+                showToast('Error', error.message, 'error');
                 console.error('Error:', error);
+                // Aquí podrías forzar un reload o emitir un evento de Alpine para resetear el botón
+                location.reload(); 
             });
         }
 
-        // Función auxiliar para obtener el token CSRF
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -153,6 +175,4 @@
         }
     });
 </script>
-{% endblock %}
-
 {% endblock %}

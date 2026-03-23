@@ -1,0 +1,213 @@
+/* Custom Admin Styles for FirmING */
+:root {
+    --primary: #003774; /* USC Navy */
+    --primary-fg: #fff;
+    --secondary: #B56014; /* USC Orange */
+    --accent: #B56014;
+    --header-bg: #003774;
+    --header-color: #fff;
+    --header-link-color: #eee;
+    --breadcrumbs-fg: #eee;
+    --breadcrumbs-bg: #002e61;
+}
+
+body {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+#header {
+    background: var(--header-bg) !important;
+    color: var(--header-color) !important;
+}
+
+#header a:link, #header a:visited {
+    color: var(--header-link-color) !important;
+}
+
+#branding h1 {
+    color: #fff !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px;
+}
+
+#branding h1::before {
+    content: "\e933"; /* primeicons pencil */
+    font-family: 'primeicons';
+    margin-right: 10px;
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+
+/* Sidebar styling (Django 5.x) */
+#nav-sidebar {
+    background: #f8fafc !important;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.dark #nav-sidebar {
+    background: #0f172a !important;
+    border-right: 1px solid #1e293b !important;
+}
+
+#nav-sidebar .module th {
+    background: transparent !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+#nav-sidebar .module td a {
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    margin: 2px 0 !important;
+    display: block !important;
+    font-size: 0.85rem !important;
+    color: #475569 !important;
+}
+
+#nav-sidebar .module td a:hover {
+    background: #f1f5f9 !important;
+    color: var(--primary) !important;
+}
+
+/* Changelist improvements */
+#changelist-filter {
+    background: #f8fafc !important;
+    border-left: 1px solid #e2e8f0 !important;
+}
+
+#changelist table {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid #f1f5f9 !important;
+}
+
+#changelist table thead th {
+    background: #f8fafc !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    padding: 12px 15px !important;
+}
+
+#changelist table tbody tr:hover {
+    background-color: #f1f5f9 !important;
+}
+
+/* Dashboard icons for the index page */
+.dashboard .module table th a::before {
+    font-family: 'primeicons';
+    margin-right: 8px;
+    color: var(--primary);
+    opacity: 0.7;
+}
+
+.dashboard .app-auth .module table th a::before { content: "\e966"; } /* users */
+.dashboard .app-core .module table th a::before { content: "\e926"; } /* file */
+
+/* Better form inputs */
+input[type=text], input[type=password], input[type=email], input[type=url], input[type=number], textarea, select {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    box-shadow: none !important;
+    transition: border-color 0.2s, ring 0.2s !important;
+}
+
+input[type=text]:focus, input[type=password]:focus, textarea:focus, select:focus {
+    border-color: var(--primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0, 55, 116, 0.1) !important;
+}
+
+/* Submit row style */
+.submit-row {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 15px !important;
+    margin-top: 20px !important;
+}
+
+.breadcrumbs {
+    background: var(--breadcrumbs-bg) !important;
+    color: var(--breadcrumbs-fg) !important;
+}
+
+.breadcrumbs a {
+    color: #fff !important;
+}
+
+.module h2, .module caption, .inline-group h2 {
+    background: var(--primary) !important;
+    color: #fff !important;
+    border-radius: 8px 8px 0 0;
+}
+
+div.breadcrumbs {
+    margin-bottom: 20px;
+    border-radius: 0 0 8px 8px;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: var(--primary) !important;
+    border-radius: 8px !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    transition: all 0.3s !important;
+    font-weight: 600 !important;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, a.button:hover {
+    background: var(--secondary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(181, 96, 20, 0.3) !important;
+}
+
+.button.default, input[type=submit].default, .submit-row input.default {
+    background: var(--secondary) !important;
+}
+
+.button.default:hover, input[type=submit].default:hover, .submit-row input.default:hover {
+    background: var(--primary) !important;
+}
+
+/* Rounded corners for modules */
+.module {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid #eee !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02) !important;
+}
+
+/* Custom login page */
+body.login {
+    background: linear-gradient(135deg, #003774 0%, #00142b 100%) !important;
+}
+
+#login-main {
+    width: 100% !important;
+    max-width: 450px !important;
+}
+
+.login #container {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 24px !important;
+    padding: 40px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.login #header {
+    background: transparent !important;
+    color: #003774 !important;
+}
+
+.login #branding h1 {
+    color: #003774 !important;
+}

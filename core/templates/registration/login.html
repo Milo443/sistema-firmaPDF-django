@@ -1,24 +1,107 @@
 {% extends "core/base.html" %}
 {% load crispy_forms_tags %}
 
-{% block page_content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4">Iniciar Sesión</h2>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{% url 'login_redirect' %}">
+{% block title %}Iniciar Sesión | FirmING{% endblock %}
 
-                    {{ form|crispy }}
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary mt-3">Ingresar</button>
+{% block page_content %}
+<div class="min-h-[calc(100vh-160px)] flex items-center justify-center p-4" x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)">
+    <!-- Main Auth Card -->
+    <div 
+        class="w-full max-w-4xl flex flex-col md:flex-row glass-card overflow-hidden shadow-2xl transition-all duration-700 transform"
+        x-show="show"
+        x-transition:enter="transition ease-out duration-700"
+        x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+    >
+        <!-- Left Side: Branding/Visual -->
+        <div class="md:w-1/2 bg-gradient-to-br from-primary-600 to-primary-800 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+            <!-- Decorative circles -->
+            <div class="absolute -top-12 -left-12 w-48 h-48 bg-primary-500/20 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-12 -right-12 w-48 h-48 bg-secondary-500/20 rounded-full blur-3xl"></div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                        <i class="pi pi-pencil text-xl text-white"></i>
                     </div>
-                </form>
+                    <span class="text-2xl font-bold tracking-tight text-white">FirmING</span>
+                </div>
+                
+                <h2 class="text-3xl font-bold mb-6 leading-tight">La forma más segura y rápida de firmar tus documentos.</h2>
+                <ul class="space-y-4 text-primary-100/90">
+                    <li class="flex items-center gap-3">
+                        <i class="pi pi-check-circle text-emerald-400"></i>
+                        <span>Firma digital instantánea</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="pi pi-check-circle text-emerald-400"></i>
+                        <span>Seguridad de nivel bancario</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="pi pi-check-circle text-emerald-400"></i>
+                        <span>Gestión centralizada de PDFs</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="relative z-10 pt-8 border-t border-white/10 mt-12 text-sm text-primary-200/70 italic">
+                &quot;FirmING ha transformado nuestra gestión documental, haciéndola eficiente y sin papel.&quot;
+            </div>
+        </div>
+
+        <!-- Right Side: Login Form -->
+        <div class="md:w-1/2 p-10 bg-white dark:bg-slate-900 flex flex-col justify-center">
+            <div class="mb-10">
+                <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Bienvenido</h1>
+                <p class="text-slate-500 dark:text-slate-400">Ingresa tus credenciales para acceder a tu panel.</p>
+            </div>
+
+            <form method="post" action="{% url 'login' %}" class="space-y-6">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'login_redirect' %}">
+
+                <div class="auth-form-container">
+                    {{ form|crispy }}
+                </div>
+                
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-700">
+                        <span>Recordarme</span>
+                    </label>
+                    <a href="#" class="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400">¿Olvidaste tu contraseña?</a>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-lg group transition-all duration-300">
+                        <span>Ingresar</span>
+                        <i class="pi pi-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-10 text-center">
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    ¿No tienes una cuenta? 
+                    <a href="#" class="font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 underline underline-offset-4">Regístrate gratis</a>
+                </p>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para el formulario de login en el contenedor de auth */
+    .auth-form-container .mb-3 {
+        @apply mb-5;
+    }
+    .auth-form-container label {
+        @apply text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block;
+    }
+    .auth-form-container input {
+        @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:ring-primary-400/10 dark:focus:border-primary-400;
+    }
+</style>
 {% endblock %}

@@ -1,153 +1,242 @@
 {% load static %}<!doctype html>
-<html lang="es">
+<html lang="es" x-data="{ 
+    darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
+    toggleTheme() {
+        this.darkMode = !this.darkMode;
+        localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+    }
+}" :class="{ 'dark': darkMode, 'light': !darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Sistema de Firmas{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static 'core/css/custom.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}"><i class="bi bi-pencil-fill"></i> FirmING</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    {% if user.is_authenticated %}
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'manage_signature' %}">Mi Firma</a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <span class="nav-link me-3">Hola, {{ user.username }}</span>
-                        </li>
-
-                        <li class="nav-item">
-                            <form action="{% url 'logout' %}" method="post">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary">Salir</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Ingresar</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <main class="container my-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-        {% block page_content %}{% endblock %}
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
-    <!-- <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Selecciona todos los botones con la clase 'btn-rasterizar'
-        const rasterizeButtons = document.querySelectorAll('.btn-rasterizar');
-        
-        // Obtén el token CSRF para la petición. Es crucial para la seguridad de Django.
-        const csrftoken = getCookie('csrftoken');
-
-        // Itera sobre cada botón y añade el evento 'click'
-        rasterizeButtons.forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault(); 
-                
-                const documentId = this.dataset.documentId;
-                const listItem = this.closest('.list-group-item');
-                const statusElement = listItem.querySelector('small strong');
-                
-                // Guarda el texto original del botón para restaurarlo en caso de error
-                const originalText = this.innerHTML;
-                
-                // Muestra un indicador de carga y deshabilita el botón
-                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Rasterizando...';
-                this.disabled = true;
-
-                // Llama a la URL de la vista de Django
-                fetch(`/api/documents/${documentId}/rasterize/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                        'Content-Type': 'application/json'
+    <title>{% block title %}FirmING | Sistema de Firmas{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'core/img/favicon.png' %}">
+    
+    <!-- Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons: PrimeIcons -->
+    <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+    
+    <!-- CSS: Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
                     },
-                    // No se necesita body para esta petición, ya que el ID va en la URL
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        // Si el servidor responde con un error HTTP, lo lanza
-                        return response.json().then(errorData => {
-                            throw new Error(errorData.message || 'Error desconocido.');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Reemplazar el botón con el nuevo enlace de descarga
-                        const downloadLink = document.createElement('a');
-                        downloadLink.href = data.download_url;
-                        downloadLink.className = 'btn btn-sm btn-success';
-                        downloadLink.download = true; // Forzar la descarga
-                        downloadLink.innerHTML = '<i class="bi bi-download"></i> Descargar Aplanado';
-                        
-                        this.replaceWith(downloadLink); // Reemplaza el botón por el enlace
-
-                        // Actualiza el estado del texto en la lista para que sea visible
-                        if (statusElement) {
-                            statusElement.innerText = 'Aplanado/Rasterizado';
-                        }
-                        
-                        // Muestra un mensaje global de éxito
-                        const statusMessage = document.getElementById('statusMessage');
-                        statusMessage.innerHTML = `<div class="alert alert-success" role="alert">Documento '${documentId}' rasterizado exitosamente.</div>`;
-                        
-                    } else {
-                        // Si la respuesta es JSON pero con un estado de error
-                        throw new Error(data.message);
-                    }
-                })
-                .catch(error => {
-                    // Maneja cualquier error de red o de la petición
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-                    const statusMessage = document.getElementById('statusMessage');
-                    statusMessage.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${error.message}</div>`;
-                    console.error('Error:', error);
-                });
-            });
-        });
-
-        // Función auxiliar para obtener el token CSRF
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.startsWith(name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+                    colors: {
+                        primary: {
+                        50: '#f0f5fa',
+                        100: '#e1eaf5',
+                        200: '#c2d5eb',
+                        300: '#94b5db',
+                        400: '#5f8cc4',
+                        500: '#003774', /* USC Blue */
+                        600: '#002e61',
+                        700: '#00264f',
+                        800: '#001e3e',
+                        900: '#00142b',
+                    },
+                    secondary: {
+                        50: '#fdf7f2',
+                        100: '#fbece0',
+                        200: '#f7d6bf',
+                        300: '#f1b691',
+                        400: '#e88d59',
+                        500: '#B56014', /* USC Accent Orange */
+                        600: '#a35012',
+                        700: '#873f10',
+                        800: '#6c3311',
+                        900: '#592b11',
+                    },
                     }
                 }
             }
-            return cookieValue;
+        };
+
+        const showToast = (title, message, type) => {
+            const statusMessage = document.getElementById('statusMessage');
+            if(!statusMessage) return;
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/90' : 'bg-red-50 dark:bg-red-900/90';
+            const borderColor = type === 'success' ? 'border-emerald-200 dark:border-emerald-800' : 'border-red-200 dark:border-red-800';
+            const textColor = type === 'success' ? 'text-emerald-800 dark:text-emerald-100' : 'text-red-800 dark:text-red-100';
+            const icon = type === 'success' ? 'pi-check-circle' : 'pi-exclamation-circle';
+
+            toast.className = `flex items-start gap-3 p-4 rounded-2xl border backdrop-blur-md shadow-2xl animate-slide-in-right mb-4 pointer-events-auto ${bgColor} ${borderColor} ${textColor}`;
+            toast.innerHTML = `
+                <i class="pi ${icon} mt-0.5 text-lg"></i>
+                <div class="flex-1">
+                    <p class="font-bold text-sm">${title}</p>
+                    <p class="text-sm opacity-90">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-current opacity-50 hover:opacity-100 transition-opacity">
+                    <i class="pi pi-times"></i>
+                </button>
+            `;
+            statusMessage.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('opacity-0', 'translate-x-full');
+                    toast.classList.replace('animate-slide-in-right', 'transition-all duration-500');
+                    setTimeout(() => toast.remove(), 500);
+                }
+            }, 5000);
+        };
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply font-sans antialiased text-slate-900 bg-slate-50 transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100;
+            }
         }
-    });
-</script> -->
+        @layer components {
+            .btn-primary {
+                @apply px-4 py-2 bg-primary-600 text-white rounded-lg font-medium transition-all hover:bg-primary-700 active:scale-95 shadow-lg shadow-primary-500/20;
+            }
+            .btn-secondary {
+                @apply px-4 py-2 bg-secondary-600 text-white rounded-lg font-medium transition-all hover:bg-secondary-700 active:scale-95 shadow-lg shadow-secondary-500/20;
+            }
+            .glass-card {
+                @apply bg-white/80 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl dark:bg-slate-800/80 dark:border-slate-700/50;
+            }
+            .nav-link {
+                @apply text-slate-600 hover:text-primary-600 font-medium transition-colors dark:text-slate-400 dark:hover:text-primary-400;
+            }
+            /* Form overrides for crispy_forms */
+            .form-control, .form-select, .form-file-input {
+                @apply block w-auto w-full px-4 py-2.5 text-slate-900 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:focus:ring-primary-400/10 dark:focus:border-primary-400;
+            }
+            .form-label {
+                @apply block mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300;
+            }
+            .invalid-feedback {
+                @apply mt-1.5 text-xs font-medium text-red-500 flex items-center gap-1 before:content-['\e94c'] before:font-['primeicons'];
+            }
+            .mb-3 {
+                @apply mb-5;
+            }
+            .alert-danger { @apply bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400; }
+            .alert-success { @apply bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400; }
+        }
+
+        @keyframes slide-in-right {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in-right {
+            animation: slide-in-right 0.3s ease-out forwards;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
+    <!-- Global Toast Container -->
+    <div id="statusMessage" class="fixed bottom-6 right-6 z-[60] max-w-md w-full pointer-events-none"></div>
+
+    <!-- Header principal -->
+    <header class="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/70 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/70">
+        <div class="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
+            <div class="flex items-center gap-2">
+                <a href="{% url 'dashboard' %}" class="flex items-center gap-3 text-2xl font-bold text-primary-600 dark:text-primary-400 transition-transform active:scale-95 group">
+                    <div class="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 overflow-hidden group-hover:scale-110 transition-transform">
+                        <img src="{% static 'core/img/logo.png' %}" alt="Logo" class="w-full h-full object-cover">
+                    </div>
+                    <span>FirmING</span>
+                </a>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-8">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'manage_signature' %}" class="nav-link">Mi Firma</a>
+                    <div class="flex items-center gap-3 border-l border-slate-200 pl-8 dark:border-slate-700">
+                        <span class="text-sm text-slate-500 dark:text-slate-400">Hola, <span class="font-semibold text-slate-900 dark:text-white">{{ user.username }}</span></span>
+                        <form action="{% url 'logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 transition-all hover:bg-red-50 hover:text-red-600 active:scale-95 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-red-900/30 dark:hover:text-red-400">
+                                <i class="pi pi-sign-out"></i>
+                                Salir
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn-primary flex items-center gap-2">
+                        <i class="pi pi-user"></i>
+                        Ingresar
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="flex items-center gap-4">
+                <!-- Switch de Modo Oscuro/Claro con Alpine.js -->
+                <div class="flex items-center">
+                    <button 
+                        @click="toggleTheme()" 
+                        class="relative inline-flex h-9 w-16 items-center rounded-full transition-colors focus:outline-none"
+                        :class="darkMode ? 'bg-primary-600' : 'bg-slate-200'"
+                    >
+                        <span class="sr-only">Toggle Dark Mode</span>
+                        <span 
+                            class="inline-block h-7 w-7 transform rounded-full bg-white shadow-xl transition-all duration-300 flex items-center justify-center"
+                            :class="darkMode ? 'translate-x-8 rotate-45' : 'translate-x-1 rotate-0'"
+                        >
+                            <i class="pi text-xs transition-colors" :class="darkMode ? 'pi-moon text-primary-600' : 'pi-sun text-orange-400'"></i>
+                        </span>
+                    </button>
+                </div>
+                
+                <button class="md:hidden text-slate-600 dark:text-slate-300">
+                    <i class="pi pi-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 lg:px-8 max-w-7xl flex-grow">
+        {% if messages %}
+            <div class="space-y-4 mb-8" x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+                {% for message in messages %}
+                    <div class="flex items-center justify-between p-4 rounded-xl border backdrop-blur-sm {% if message.tags == 'success' %}bg-emerald-50/80 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400{% elif message.tags == 'error' %}bg-red-50/80 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400{% else %}bg-blue-50/80 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400{% endif %}" role="alert">
+                        <div class="flex items-center gap-3">
+                            {% if message.tags == 'success' %}
+                                <i class="pi pi-check-circle"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="pi pi-exclamation-circle"></i>
+                            {% else %}
+                                <i class="pi pi-info-circle"></i>
+                            {% endif %}
+                            <p class="font-medium text-sm">{{ message }}</p>
+                        </div>
+                        <button @click="show = false" class="text-current opacity-50 hover:opacity-100 transition-opacity">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block page_content %}{% endblock %}
+    </main>
+
+    <footer class="border-t border-slate-200 dark:border-slate-800 py-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+                &copy; {{ now|date:"Y" }} FirmING - Sistema de Firma Digital Segura.
+            </p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
