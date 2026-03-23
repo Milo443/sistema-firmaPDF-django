@@ -1,0 +1,26 @@
+services:
+  firma-app:
+    # Imagen con tu usuario milo443
+    image: milo443/firma-pdf:latest
+    container_name: firma-pdf-django
+    restart: always
+
+    # Conexión a la red de tu Nginx Proxy (asegúrate de que exista en la VPS)
+    networks:
+      - web_network
+
+    # Archivo .env para variables como SECRET_KEY, DEBUG, etc.
+    env_file:
+      - .env
+
+    volumes:
+      # Persistencia para la base de datos SQLite
+      - ./db.sqlite3:/app/db.sqlite3
+      # Persistencia para los archivos media (PDFs subidos/firmados)
+      - ./media:/app/media
+      # Archivos estáticos
+      - ./staticfiles:/app/staticfiles
+
+networks:
+  web_network:
+    external: true

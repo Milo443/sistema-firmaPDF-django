@@ -29,7 +29,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['firma-ing.vooltlab.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
