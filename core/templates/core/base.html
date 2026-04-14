@@ -88,7 +88,8 @@
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.classList.add('opacity-0', 'translate-x-full');
-                    toast.classList.replace('animate-slide-in-right', 'transition-all duration-500');
+                    toast.classList.remove('animate-slide-in-right');
+                    toast.classList.add('transition-all', 'duration-500');
                     setTimeout(() => toast.remove(), 500);
                 }
             }, 5000);
