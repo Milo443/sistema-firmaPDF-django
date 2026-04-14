@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger('core')
 
 from PIL import Image
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
 from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect , get_object_or_404 
@@ -322,3 +322,17 @@ def delete_document(request, pk):
     except Exception as e:
         logger.error(f"Error al eliminar documento: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def api_signature_proxy(request):
+    """
+    Sirve la firma del usuario desde el backend para evitar problemas de CORS.
+    """
+    signature = get_object_or_404(Signature, user=request.user)
+    try:
+        with signature.image.open('rb') as f:
+            return HttpResponse(f.read(), content_type="image/png")
+    except Exception as e:
+        logger.error(f"Error en proxy de firma: {e}")
+        raise Http404("Archivo de firma no encontrado")

@@ -35,14 +35,11 @@ ALLOWED_HOSTS = ['firma-ing.vooltlab.com', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = ['https://firma-ing.vooltlab.com']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
-SECURE_SSL_REDIRECT = False # Dejar en False si Nginx ya hace el redirect
-
 # Seguridad de Cookies para HTTPS
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
-CSRF_TRUSTED_ORIGINS = ['https://firma-ing.vooltlab.com']
 
 
 # Application definition

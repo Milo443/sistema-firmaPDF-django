@@ -135,7 +135,7 @@
     <script>
         // Variables globales
         const pdfUrl = "{{ document.original_file.url }}";
-        const signatureUrl = "{{ signature_url }}";
+        const signatureUrl = "{% url 'api_signature_proxy' %}";
         const saveUrl = "{% url 'api_save_signature' pk=document.pk %}";
         const csrfToken = "{{ csrf_token }}";
         const totalPages = parseInt("{{ num_pages }}") || 0;

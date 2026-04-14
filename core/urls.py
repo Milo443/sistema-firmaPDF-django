@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/documents/<int:pk>/rasterize/', views.api_rasterize_document, name='api_rasterize_document'),
     path('api/documents/<int:pk>/flatten_original/', views.api_flatten_original, name='api_flatten_original'),
     path('api/documents/<int:pk>/delete/', views.delete_document, name='delete_document'),
+    path('api/my-signature/', views.api_signature_proxy, name='api_signature_proxy'),
 
     path('redirect-after-login/', views.login_redirect_view, name='login_redirect'),
     
