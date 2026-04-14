@@ -184,21 +184,15 @@ AWS_ACCESS_KEY_ID = os.getenv('MINIO_ACCESS_KEY')
 AWS_SECRET_ACCESS_KEY = os.getenv('MINIO_SECRET_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('MINIO_STORAGE_BUCKET_NAME', 'sistema-firmas')
 AWS_S3_ENDPOINT_URL = os.getenv('MINIO_ENDPOINT', 'https://cdn.vooltlab.com')
-AWS_S3_REGION_NAME = "us-east-1"
+AWS_S3_REGION_NAME = os.getenv('MINIO_REGION_NAME', 'us-east-1')
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
-AWS_S3_VERIFY = True
+AWS_S3_VERIFY = os.getenv('AWS_S3_VERIFY', 'True') == 'True'
 AWS_S3_ADDRESSING_STYLE = "path"
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_QUERYSTRING_AUTH = False
 
-# Configuración de Proxy
-USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
 # Configuración de STORAGES (Django 4.2+)
-# NOTA: 'config' (objeto botocore) NO es válido en OPTIONS.
-# addressing_style y signature_version se pasan como parámetros individuales.
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
@@ -211,8 +205,9 @@ STORAGES = {
             "file_overwrite": AWS_S3_FILE_OVERWRITE,
             "default_acl": AWS_DEFAULT_ACL,
             "querystring_auth": AWS_QUERYSTRING_AUTH,
-            "addressing_style": "path",
-            "signature_version": "s3v4",
+            "addressing_style": AWS_S3_ADDRESSING_STYLE,
+            "signature_version": AWS_S3_SIGNATURE_VERSION,
+            "verify": AWS_S3_VERIFY,
         },
     },
     "staticfiles": {
