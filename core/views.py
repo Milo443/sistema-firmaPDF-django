@@ -303,6 +303,29 @@ def api_flatten_original(request, pk):
 
 
 @login_required
+def download_signed_document(request, pk):
+    """
+    Proxy de descarga: sirve el archivo firmado desde Django con
+    Content-Disposition: attachment para forzar la descarga incluso
+    cuando el archivo está en un CDN/MinIO cross-origin.
+    """
+    document = get_object_or_404(Document, pk=pk, owner=request.user)
+
+    if not document.signed_file:
+        raise Http404("Este documento no tiene un archivo firmado.")
+
+    try:
+        filename = os.path.basename(document.signed_file.name)
+        with document.signed_file.open('rb') as f:
+            response = HttpResponse(f.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+    except Exception as e:
+        logger.error(f"Error en proxy de descarga: {e}")
+        raise Http404("Archivo no encontrado.")
+
+
+@login_required
 def login_redirect_view(request):
     if request.user.is_staff:
         return redirect('admin:index')

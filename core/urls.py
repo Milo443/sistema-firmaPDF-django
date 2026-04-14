@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/documents/<int:pk>/flatten_original/', views.api_flatten_original, name='api_flatten_original'),
     path('api/documents/<int:pk>/delete/', views.delete_document, name='delete_document'),
     path('api/my-signature/', views.api_signature_proxy, name='api_signature_proxy'),
+    path('document/<int:pk>/download/', views.download_signed_document, name='download_signed_document'),
 
     path('redirect-after-login/', views.login_redirect_view, name='login_redirect'),
     

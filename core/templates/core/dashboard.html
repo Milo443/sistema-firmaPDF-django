@@ -79,7 +79,7 @@
 
                     <div class="flex flex-wrap items-center gap-3">
                         {% if document.status == 'flattened' or document.status == 'signed' %}
-                            <a href="{{ document.signed_file.url }}" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95" download>
+                            <a href="{% url 'download_signed_document' pk=document.pk %}" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95" download>
                                 <i class="pi pi-download"></i>
                                 <span>Descargar PDF</span>
                             </a>
