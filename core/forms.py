@@ -43,6 +43,9 @@ from django.utils.encoding import force_bytes
 import json
 import urllib.request
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CustomPasswordResetForm(PasswordResetForm):
     def save(self, domain_override=None, email_template_name=None,
