@@ -191,6 +191,8 @@ AWS_S3_VERIFY = os.getenv('AWS_S3_VERIFY', 'True') == 'True'
 AWS_S3_ADDRESSING_STYLE = "path"
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_QUERYSTRING_AUTH = False
+AWS_S3_CUSTOM_DOMAIN = os.getenv('MINIO_PUBLIC_URL')
+AWS_S3_URL_PROTOCOL = 'https'
 
 # Configuración de STORAGES (Django 4.2+)
 STORAGES = {
@@ -208,6 +210,8 @@ STORAGES = {
             "addressing_style": AWS_S3_ADDRESSING_STYLE,
             "signature_version": AWS_S3_SIGNATURE_VERSION,
             "verify": AWS_S3_VERIFY,
+            "custom_domain": AWS_S3_CUSTOM_DOMAIN,
+            "url_protocol": AWS_S3_URL_PROTOCOL,
         },
     },
     "staticfiles": {
