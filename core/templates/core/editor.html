@@ -134,7 +134,7 @@
     <script src="https://unpkg.com/konva@8.3.14/konva.min.js"></script>
     <script>
         // Variables globales
-        const pdfUrl = "{{ document.original_file.url }}";
+        const pdfUrl = "{% url 'api_document_proxy' pk=document.pk %}";
         const signatureUrl = "{% url 'api_signature_proxy' %}";
         const saveUrl = "{% url 'api_save_signature' pk=document.pk %}";
         const csrfToken = "{{ csrf_token }}";

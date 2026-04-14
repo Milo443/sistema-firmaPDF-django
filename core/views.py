@@ -359,3 +359,16 @@ def api_signature_proxy(request):
     except Exception as e:
         logger.error(f"Error en proxy de firma: {e}")
         raise Http404("Archivo de firma no encontrado")
+
+@login_required
+def api_document_proxy(request, pk):
+    """
+    Sirve el documento original desde el backend para evitar problemas de CORS en el editor.
+    """
+    document = get_object_or_404(Document, pk=pk, owner=request.user)
+    try:
+        with document.original_file.open('rb') as f:
+            return HttpResponse(f.read(), content_type="application/pdf")
+    except Exception as e:
+        logger.error(f"Error en proxy de documento: {e}")
+        raise Http404("Archivo de documento no encontrado")
