@@ -30,6 +30,9 @@ COPY . .
 # Crea carpetas para archivos estáticos, media y logs
 RUN mkdir -p staticfiles media logs
 
+# Recopila archivos estáticos (usa una secret key temporal para el build)
+RUN python manage.py collectstatic --noinput --settings=firma_project.settings
+
 # Expone el puerto que usará Gunicorn
 EXPOSE 8000
 
