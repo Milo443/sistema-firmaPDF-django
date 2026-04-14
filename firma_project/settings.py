@@ -183,13 +183,17 @@ AWS_ACCESS_KEY_ID = os.getenv('MINIO_ACCESS_KEY')
 AWS_SECRET_ACCESS_KEY = os.getenv('MINIO_SECRET_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('MINIO_STORAGE_BUCKET_NAME', 'sistema-firmas')
 AWS_S3_ENDPOINT_URL = os.getenv('MINIO_ENDPOINT', 'https://cdn.vooltlab.com')
-AWS_S3_REGION_NAME = None  # Minio no usa regiones estilo AWS
+AWS_S3_REGION_NAME = "us-east-1"  # Forzado para compatibilidad con Minio
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None # Recomendado para la mayoría de configuraciones de MinIO
 AWS_S3_VERIFY = True # Usar HTTPS verificado
 AWS_S3_ADDRESSING_STYLE = "path" # Obligatorio para Minio con dominios personalizados
 AWS_S3_SIGNATURE_VERSION = "s3v4" # Versión de firma moderna
 AWS_QUERYSTRING_AUTH = False # Evita que las URLs tengan tokens temporales si el bucket es accesible
+
+# Configuración de Proxy
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Configuración de STORAGES (Django 4.2+)
 STORAGES = {
