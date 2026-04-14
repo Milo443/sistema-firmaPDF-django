@@ -3,6 +3,10 @@ import fitz
 import tempfile
 import os
 import traceback
+import logging
+
+# Inicializar logger
+logger = logging.getLogger('core')
 
 from PIL import Image
 from django.http import JsonResponse
@@ -40,7 +44,7 @@ def rasterize_pdf(input_path, output_path, dpi=200):
         output_doc.close()
         
     except Exception as e:
-        print(f"Error al rasterizar el PDF: {e}")
+        logger.error(f"Error al rasterizar el PDF: {e}", exc_info=True)
         raise # Vuelve a lanzar la excepción para que sea capturada por la vista
 
 # --- Vistas principales ---
@@ -109,7 +113,7 @@ def sign_document_editor(request, pk):
         num_pages = pdf_doc.page_count
         pdf_doc.close()
     except Exception as e:
-        print(f"Error al leer el PDF: {e}")
+        logger.error(f"Error al leer el PDF para firma: {e}")
         messages.error(request, 'El archivo PDF parece estar dañado o no se puede leer.')
         return redirect('dashboard')
     
@@ -185,11 +189,7 @@ def api_save_signature(request, pk):
         })
 
     except Exception as e:
-        print(f"\n¡¡¡ ERROR EN api_save_signature !!!")
-        print(f"Tipo de error: {type(e).__name__}")
-        print(f"Mensaje de error: {e}")
-        traceback.print_exc()
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+        logger.error(f"ERROR EN api_save_signature: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     try:
         data = json.loads(request.body)
@@ -299,11 +299,7 @@ def api_rasterize_document(request, pk):
         })
     
     except Exception as e:
-        print(f"\n¡¡¡ ERROR REAL EN api_rasterize_document !!!")
-        print(f"Tipo de error: {type(e).__name__}")
-        print(f"Mensaje de error: {e}")
-        traceback.print_exc()
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+        logger.error(f"ERROR EN api_rasterize_document: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
     
@@ -344,11 +340,7 @@ def api_flatten_original(request, pk):
         })
     
     except Exception as e:
-        print(f"\n¡¡¡ ERROR EN api_flatten_original !!!")
-        print(f"Tipo de error: {type(e).__name__}")
-        print(f"Mensaje de error: {e}")
-        traceback.print_exc()
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+        logger.error(f"ERROR EN api_flatten_original: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 

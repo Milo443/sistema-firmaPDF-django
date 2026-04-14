@@ -27,11 +27,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto del código de la aplicación
 COPY . .
 
-# Crea carpetas para archivos estáticos y media para que tengan los permisos correctos
-RUN mkdir -p staticfiles media
+# Crea carpetas para archivos estáticos, media y logs
+RUN mkdir -p staticfiles media logs
 
 # Expone el puerto que usará Gunicorn
 EXPOSE 8000
 
-# Comando para ejecutar la aplicación
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "firma_project.wsgi:application"]
+# Comando para ejecutar la aplicación con configuración optimizada
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "--worker-class", "gthread", "--threads", "2", "firma_project.wsgi:application"]
