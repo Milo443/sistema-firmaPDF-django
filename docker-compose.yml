@@ -1,6 +1,7 @@
 services:
   firma-app:
-    # Imagen con tu usuario milo443
+    # Construye la imagen local y la etiqueta con este nombre
+    build: .
     image: milo443/firma-pdf:latest
     container_name: firma-pdf-django
     restart: always
