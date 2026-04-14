@@ -15,4 +15,10 @@ urlpatterns = [
     path('api/documents/<int:pk>/delete/', views.delete_document, name='delete_document'),
 
     path('redirect-after-login/', views.login_redirect_view, name='login_redirect'),
+    
+    # Password Reset
+    path('accounts/password-reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
+    path('accounts/password-reset/done/', views.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('accounts/reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('accounts/reset/done/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]
