@@ -196,14 +196,9 @@ AWS_QUERYSTRING_AUTH = False
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-import botocore.client
-boto3_config = botocore.client.Config(
-    signature_version='s3v4',
-    s3={'addressing_style': 'path'},
-    retries={'max_attempts': 3, 'mode': 'standard'}
-)
-
 # Configuración de STORAGES (Django 4.2+)
+# NOTA: 'config' (objeto botocore) NO es válido en OPTIONS.
+# addressing_style y signature_version se pasan como parámetros individuales.
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
@@ -216,7 +211,8 @@ STORAGES = {
             "file_overwrite": AWS_S3_FILE_OVERWRITE,
             "default_acl": AWS_DEFAULT_ACL,
             "querystring_auth": AWS_QUERYSTRING_AUTH,
-            "config": boto3_config,
+            "addressing_style": "path",
+            "signature_version": "s3v4",
         },
     },
     "staticfiles": {
