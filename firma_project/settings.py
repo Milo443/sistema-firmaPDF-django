@@ -130,7 +130,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
@@ -184,22 +184,40 @@ AWS_ACCESS_KEY_ID = os.getenv('MINIO_ACCESS_KEY')
 AWS_SECRET_ACCESS_KEY = os.getenv('MINIO_SECRET_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('MINIO_STORAGE_BUCKET_NAME', 'sistema-firmas')
 AWS_S3_ENDPOINT_URL = os.getenv('MINIO_ENDPOINT', 'https://cdn.vooltlab.com')
-AWS_S3_REGION_NAME = "us-east-1"  # Forzado para compatibilidad con Minio
+AWS_S3_REGION_NAME = "us-east-1"
 AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None # Recomendado para la mayoría de configuraciones de MinIO
-AWS_S3_VERIFY = True # Usar HTTPS verificado
-AWS_S3_ADDRESSING_STYLE = "path" # Obligatorio para Minio con dominios personalizados
-AWS_S3_SIGNATURE_VERSION = "s3v4" # Versión de firma moderna
-AWS_QUERYSTRING_AUTH = False # Evita que las URLs tengan tokens temporales si el bucket es accesible
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+AWS_S3_ADDRESSING_STYLE = "path"
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+AWS_QUERYSTRING_AUTH = False
 
 # Configuración de Proxy
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+import botocore.client
+boto3_config = botocore.client.Config(
+    signature_version='s3v4',
+    s3={'addressing_style': 'path'},
+    retries={'max_attempts': 3, 'mode': 'standard'}
+)
+
 # Configuración de STORAGES (Django 4.2+)
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": AWS_ACCESS_KEY_ID,
+            "secret_key": AWS_SECRET_ACCESS_KEY,
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "endpoint_url": AWS_S3_ENDPOINT_URL,
+            "region_name": AWS_S3_REGION_NAME,
+            "file_overwrite": AWS_S3_FILE_OVERWRITE,
+            "default_acl": AWS_DEFAULT_ACL,
+            "querystring_auth": AWS_QUERYSTRING_AUTH,
+            "config": boto3_config,
+        },
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",

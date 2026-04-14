@@ -11,6 +11,6 @@ urlpatterns = [
     path('', include('core.urls')), 
 ]
 
-# Redirigido para servir media en producci?n`n
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# Servir archivos media y estáticos
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
