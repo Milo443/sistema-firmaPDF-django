@@ -170,7 +170,8 @@
             pdfjsLib.getDocument(pdfUrl).promise,
             new Promise((resolve, reject) => {
                 const img = new Image();
-                img.onload = () => Konva.Image.fromURL(signatureUrl, resolve);
+                img.crossOrigin = "anonymous";
+                img.onload = () => Konva.Image.fromURL(signatureUrl, { crossOrigin: 'anonymous' }, resolve);
                 img.onerror = () => reject(new Error("Error al cargar la firma"));
                 img.src = signatureUrl;
                 setTimeout(() => reject(new Error("Timeout cargando firma")), 10000);
