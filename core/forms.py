@@ -84,8 +84,14 @@ class CustomPasswordResetForm(PasswordResetForm):
         
         try:
             with urllib.request.urlopen(req) as response:
-                return response.read()
+                res_body = response.read().decode('utf-8')
+                print(f"DEBUG: EmailJS Success: {res_body}")
+                return res_body
+        except urllib.error.HTTPError as e:
+            res_body = e.read().decode('utf-8')
+            print(f"DEBUG: EmailJS HTTP Error {e.code}: {res_body}")
+            logger.error(f"EmailJS HTTP Error {e.code}: {res_body}")
         except Exception as e:
-            # Podríamos loguear esto apropiadamente en views.py si fuera necesario
-            pass
+            print(f"DEBUG: EmailJS Exception: {e}")
+            logger.error(f"Error enviando EmailJS: {e}")
         
