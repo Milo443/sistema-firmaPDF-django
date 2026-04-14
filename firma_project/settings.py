@@ -29,7 +29,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 
 
-ALLOWED_HOSTS = ['firma-ing.vooltlab.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['firma-ing.vooltlab.com', 'localhost', '127.0.0.1', '51.79.55.23']
 
 # Configuración necesaria para HTTPS y Proxies (Nginx) en producción
 CSRF_TRUSTED_ORIGINS = ['https://firma-ing.vooltlab.com', 'http://firma-ing.vooltlab.com']
