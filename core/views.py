@@ -20,18 +20,23 @@ from django.contrib import messages
 from .models import Document, Signature 
 from .forms import DocumentForm, SignatureForm
 
-# --- Funciones auxiliares (fuera de las vistas) ---
-def rasterize_pdf(input_path, output_path, dpi=200):
+# --- Funciones auxiliares (fuela de las vistas) ---
+def rasterize_pdf(input_stream, output_stream, dpi=200):
     """
     Rasteriza un PDF convirtiendo cada página en una imagen y creando un nuevo PDF.
     
     Args:
-        input_path (str): Ruta al archivo PDF de entrada.
-        output_path (str): Ruta para guardar el PDF rasterizado.
+        input_stream: Objeto tipo archivo o bytes del PDF de entrada.
+        output_stream: Objeto tipo archivo o stream para guardar el PDF rasterizado.
         dpi (int): Resolución de las imágenes (puntos por pulgada).
     """
     try:
-        source_doc = fitz.open(input_path)
+        # Si input_stream es un objeto de archivo de Django, leemos sus bytes
+        if hasattr(input_stream, 'read'):
+            source_doc = fitz.open(stream=input_stream.read(), filetype="pdf")
+        else:
+            source_doc = fitz.open(stream=input_stream, filetype="pdf")
+            
         output_doc = fitz.open()
         
         for page in source_doc:
@@ -39,13 +44,16 @@ def rasterize_pdf(input_path, output_path, dpi=200):
             new_page = output_doc.new_page(width=pix.width, height=pix.height)
             new_page.insert_image(new_page.rect, pixmap=pix)
 
-        output_doc.save(output_path, garbage=4, deflate=True)
+        # Guardamos en el stream de salida
+        pdf_bytes = output_doc.tobytes(garbage=4, deflate=True)
+        output_stream.write(pdf_bytes)
+        
         source_doc.close()
         output_doc.close()
         
     except Exception as e:
         logger.error(f"Error al rasterizar el PDF: {e}", exc_info=True)
-        raise # Vuelve a lanzar la excepción para que sea capturada por la vista
+        raise
 
 # --- Vistas principales ---
 @login_required
@@ -109,9 +117,11 @@ def sign_document_editor(request, pk):
 
     num_pages = 0
     try:
-        pdf_doc = fitz.open(document.original_file.path)
-        num_pages = pdf_doc.page_count
-        pdf_doc.close()
+        # Usamos .open() y stream para compatibilidad con S3/MinIO
+        with document.original_file.open('rb') as f:
+            pdf_doc = fitz.open(stream=f.read(), filetype="pdf")
+            num_pages = pdf_doc.page_count
+            pdf_doc.close()
     except Exception as e:
         logger.error(f"Error al leer el PDF para firma: {e}")
         messages.error(request, 'El archivo PDF parece estar dañado o no se puede leer.')
@@ -142,39 +152,43 @@ def api_save_signature(request, pk):
         signature = get_object_or_404(Signature, user=request.user)
         
         # --- Lógica de rotación de la firma ---
-        img = Image.open(signature.image.path)
-        rotated_img = img.rotate(-data['rotation'], expand=True, resample=Image.Resampling.BICUBIC)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
-            rotated_img.save(temp_img, "PNG")
-            temp_image_path = temp_img.name
+        with signature.image.open('rb') as f:
+            img = Image.open(f)
+            rotated_img = img.rotate(-data['rotation'], expand=True, resample=Image.Resampling.BICUBIC)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
+                rotated_img.save(temp_img, "PNG")
+                temp_image_path = temp_img.name
 
         # --- Lógica para insertar la firma en el PDF ---
-        # Abrir el documento original
-        pdf_doc = fitz.open(document.original_file.path)
-        page_index = data['page_number'] - 1
-        page = pdf_doc[page_index]
-        
-        # Conversión de coordenadas
-        pdf_width = page.rect.width
-        pdf_height = page.rect.height
-        x_ratio = pdf_width / data['page_width']
-        y_ratio = pdf_height / data['page_height']
-        x = data['x'] * x_ratio
-        y = data['y'] * y_ratio
-        width = data['width'] * x_ratio
-        height = data['height'] * y_ratio
-        signature_rect = fitz.Rect(x, y, x + width, y + height)
-        page.insert_image(signature_rect, filename=temp_image_path)
-        
-        # Obtener los bytes del PDF modificado directamente desde la memoria
-        pdf_bytes = pdf_doc.tobytes(garbage=4, clean=True)
-        pdf_doc.close()
+        # Abrir el documento original mediante stream
+        with document.original_file.open('rb') as f:
+            pdf_doc = fitz.open(stream=f.read(), filetype="pdf")
+            page_index = data['page_number'] - 1
+            page = pdf_doc[page_index]
+            
+            # Conversión de coordenadas
+            pdf_width = page.rect.width
+            pdf_height = page.rect.height
+            x_ratio = pdf_width / data['page_width']
+            y_ratio = pdf_height / data['page_height']
+            x = data['x'] * x_ratio
+            y = data['y'] * y_ratio
+            width = data['width'] * x_ratio
+            height = data['height'] * y_ratio
+            signature_rect = fitz.Rect(x, y, x + width, y + height)
+            page.insert_image(signature_rect, filename=temp_image_path)
+            
+            # Obtener los bytes del PDF modificado directamente desde la memoria
+            pdf_bytes = pdf_doc.tobytes(garbage=4, clean=True)
+            pdf_doc.close()
         
         # Limpiar el archivo de imagen temporal
-        os.remove(temp_image_path)
+        if os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
         
         # 1. Guardar los bytes del PDF en el modelo de Django
-        output_filename = os.path.basename(document.original_file.path).replace('.pdf', '_signed.pdf')
+        # Usamos .name para obtener el nombre base sin depender de .path
+        output_filename = os.path.basename(document.original_file.name).replace('.pdf', '_signed.pdf')
         document.signed_file.save(output_filename, ContentFile(pdf_bytes), save=True)
         
         # 2. Actualizar el estado del documento
@@ -191,74 +205,6 @@ def api_save_signature(request, pk):
     except Exception as e:
         logger.error(f"ERROR EN api_save_signature: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    try:
-        data = json.loads(request.body)
-        if data['page_width'] == 0 or data['page_height'] == 0:
-            return JsonResponse({'status': 'error', 'message': 'Las dimensiones de la página son cero.'}, status=400)
-
-        document = get_object_or_404(Document, pk=pk, owner=request.user)
-        signature = get_object_or_404(Signature, user=request.user)
-        
-        # Lógica de rotación de la firma
-        img = Image.open(signature.image.path)
-        rotated_img = img.rotate(-data['rotation'], expand=True, resample=Image.Resampling.BICUBIC)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
-            rotated_img.save(temp_img, "PNG")
-            temp_image_path = temp_img.name
-
-        pdf_doc = fitz.open(document.original_file.path)
-        page_index = data['page_number'] - 1
-        page = pdf_doc[page_index]
-        
-        # Conversión de coordenadas
-        pdf_width = page.rect.width
-        pdf_height = page.rect.height
-        x_ratio = pdf_width / data['page_width']
-        y_ratio = pdf_height / data['page_height']
-        x = data['x'] * x_ratio
-        y = data['y'] * y_ratio
-        width = data['width'] * x_ratio
-        height = data['height'] * y_ratio
-        signature_rect = fitz.Rect(x, y, x + width, y + height)
-        page.insert_image(signature_rect, filename=temp_image_path)
-        
-        # 1. Guardar los cambios en un nuevo archivo temporal
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_signed_pdf:
-            pdf_doc.save(temp_signed_pdf.name, garbage=4, clean=True)
-            output_path = temp_signed_pdf.name
-        
-        # 2. CERRAR el documento de PyMuPDF antes de hacer cualquier otra cosa
-        pdf_doc.close()
-        
-        # Limpiar el archivo de imagen temporal
-        os.remove(temp_image_path)
-        
-        # 3. Guardar el archivo temporal en el modelo de Django
-        output_filename = os.path.basename(document.original_file.path).replace('.pdf', '_signed.pdf')
-        with open(output_path, 'rb') as f:
-            document.signed_file.save(output_filename, ContentFile(f.read()), save=True)
-        
-        # Actualizar el estado del documento
-        document.status = 'signed'
-        document.save()
-        
-        # 4. Eliminar el archivo temporal DESPUÉS de haberlo guardado en el modelo
-        os.remove(output_path)
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Firma aplicada correctamente.',
-            'download_url': document.signed_file.url,
-            'document_status': document.status
-        })
-
-    except Exception as e:
-        print(f"\n¡¡¡ ERROR EN api_save_signature !!!")
-        print(f"Tipo de error: {type(e).__name__}")
-        print(f"Mensaje de error: {e}")
-        traceback.print_exc()
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 @login_required
 @require_POST
@@ -269,28 +215,25 @@ def api_rasterize_document(request, pk):
         if not document.signed_file:
             return JsonResponse({'status': 'error', 'message': 'El documento no tiene un archivo firmado para aplanar.'}, status=400)
         
-        # Rutas de los archivos
-        input_path = document.signed_file.path
+        # Nombre del archivo basado en el nombre original disponible
+        rasterized_filename = os.path.basename(document.signed_file.name).replace('.pdf', '_final.pdf')
         
-        # Usamos un nombre de archivo temporal para el PDF rasterizado
-        rasterized_filename = os.path.basename(input_path).replace('.pdf', '_final.pdf')
-        output_path = os.path.join(os.path.dirname(input_path), rasterized_filename)
+        # Usamos un stream en memoria para el resultado
+        import io
+        output_buffer = io.BytesIO()
         
-        # Llama a la función que hace el trabajo pesado
-        rasterize_pdf(input_path, output_path)
+        # Llama a la función que hace el trabajo pesado pasandole el stream
+        with document.signed_file.open('rb') as f:
+            rasterize_pdf(f, output_buffer)
         
         # Guarda el nuevo archivo rasterizado en el modelo
-        with open(output_path, 'rb') as f:
-            # Reemplaza el archivo signed_file con el nuevo
-            document.signed_file.save(rasterized_filename, ContentFile(f.read()), save=True)
+        output_buffer.seek(0)
+        document.signed_file.save(rasterized_filename, ContentFile(output_buffer.read()), save=True)
             
         # --- Actualizar el estado del documento a 'flattened' ---
         document.status = 'flattened'
         document.save()
             
-        # Limpia el archivo temporal
-        os.remove(output_path)
-
         return JsonResponse({
             'status': 'success',
             'message': 'Documento rasterizado exitosamente.',
@@ -310,28 +253,25 @@ def api_flatten_original(request, pk):
     try:
         document = get_object_or_404(Document, pk=pk, owner=request.user)
         
-        # El archivo de entrada es el original_file
-        input_path = document.original_file.path
-        
         # El nombre del archivo de salida
-        output_filename = os.path.basename(input_path).replace('.pdf', '_flattened.pdf')
-        output_path = os.path.join(os.path.dirname(input_path), output_filename)
+        output_filename = os.path.basename(document.original_file.name).replace('.pdf', '_flattened.pdf')
         
-        # Llama a la función de rasterización
-        rasterize_pdf(input_path, output_path)
+        # Usamos un stream en memoria para el resultado
+        import io
+        output_buffer = io.BytesIO()
+        
+        # Llama a la función de rasterización usando streams
+        with document.original_file.open('rb') as f:
+            rasterize_pdf(f, output_buffer)
         
         # Guarda el nuevo archivo aplanado en el modelo
-        with open(output_path, 'rb') as f:
-            # Reemplaza el archivo 'signed_file' con el nuevo aplanado
-            document.signed_file.save(output_filename, ContentFile(f.read()), save=True)
+        output_buffer.seek(0)
+        document.signed_file.save(output_filename, ContentFile(output_buffer.read()), save=True)
             
         # Actualiza el estado del documento
         document.status = 'flattened_original'
         document.save()
             
-        # Limpia el archivo temporal
-        os.remove(output_path)
-
         return JsonResponse({
             'status': 'success',
             'message': 'Documento original aplanado exitosamente.',
