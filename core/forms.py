@@ -83,8 +83,7 @@ class CustomPasswordResetForm(PasswordResetForm):
         data = {
             'service_id': service_id,
             'template_id': template_id,
-            'user_id': public_key,      # Formato REST API
-            'publicKey': public_key,    # Formato SDK moderno (doble verificación)
+            'user_id': public_key,
             'accessToken': private_key,
             'template_params': {
                 'email': email,
