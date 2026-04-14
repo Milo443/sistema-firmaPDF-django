@@ -22,8 +22,8 @@ services:
       - ./db.sqlite3:/app/db.sqlite3
       # Persistencia para los archivos media (PDFs subidos/firmados)
       - ./media:/app/media
-      # Archivos estáticos
-      - ./staticfiles:/app/staticfiles
+      # NOTA: staticfiles NO se monta como volumen porque collectstatic
+      # ya embebe los archivos en la imagen durante el docker build
 
 networks:
   web_network:
