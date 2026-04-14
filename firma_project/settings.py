@@ -32,7 +32,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['firma-ing.vooltlab.com', 'localhost', '127.0.0.1']
 
 # Configuración necesaria para HTTPS y Proxies (Nginx) en producción
-CSRF_TRUSTED_ORIGINS = ['https://firma-ing.vooltlab.com']
+CSRF_TRUSTED_ORIGINS = ['https://firma-ing.vooltlab.com', 'http://firma-ing.vooltlab.com']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 # Seguridad de Cookies para HTTPS
@@ -40,6 +40,7 @@ CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
+CSRF_USE_SESSIONS = True
 
 
 # Application definition
