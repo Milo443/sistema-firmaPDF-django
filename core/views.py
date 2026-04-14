@@ -290,3 +290,22 @@ def login_redirect_view(request):
         return redirect('admin:index')
     else:
         return redirect('dashboard')
+
+
+@login_required
+@require_POST
+def delete_document(request, pk):
+    try:
+        document = get_object_or_404(Document, pk=pk, owner=request.user)
+        # Opcional: Eliminar archivos físicos del almacenamiento si se desea
+        # Con django-storages S3, esto llamará al borrado en el bucket
+        if document.original_file:
+            document.original_file.delete(save=False)
+        if document.signed_file:
+            document.signed_file.delete(save=False)
+            
+        document.delete()
+        return JsonResponse({'status': 'success', 'message': 'Documento eliminado correctamente.'})
+    except Exception as e:
+        logger.error(f"Error al eliminar documento: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
