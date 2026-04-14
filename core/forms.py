@@ -71,11 +71,21 @@ class CustomPasswordResetForm(PasswordResetForm):
 
     def send_emailjs(self, email, link):
         url = "https://api.emailjs.com/api/v1.0/email/send"
+        
+        service_id = os.getenv('EMAILJS_SERVICE_ID')
+        template_id = os.getenv('EMAILJS_TEMPLATE_ID')
+        public_key = os.getenv('EMAILJS_PUBLIC_KEY')
+        private_key = os.getenv('EMAILJS_PRIVATE_KEY')
+        
+        # Log para verificar que las variables existen (ocultando parcial para seguridad)
+        print(f"DEBUG: EmailJS Config - Service: {service_id}, Template: {template_id}, Public: {public_key[:4]}..., Private: {private_key[:4]}...")
+
         data = {
-            'service_id': os.getenv('EMAILJS_SERVICE_ID'),
-            'template_id': os.getenv('EMAILJS_TEMPLATE_ID'),
-            'user_id': os.getenv('EMAILJS_PUBLIC_KEY'),
-            'accessToken': os.getenv('EMAILJS_PRIVATE_KEY'),
+            'service_id': service_id,
+            'template_id': template_id,
+            'user_id': public_key,      # Formato REST API
+            'publicKey': public_key,    # Formato SDK moderno (doble verificación)
+            'accessToken': private_key,
             'template_params': {
                 'email': email,
                 'link': link,
@@ -90,6 +100,7 @@ class CustomPasswordResetForm(PasswordResetForm):
             with urllib.request.urlopen(req) as response:
                 res_body = response.read().decode('utf-8')
                 print(f"DEBUG: EmailJS Success: {res_body}")
+                logger.info(f"Email enviado correctamente vía EmailJS: {res_body}")
                 return res_body
         except urllib.error.HTTPError as e:
             res_body = e.read().decode('utf-8')
