@@ -206,6 +206,8 @@ STORAGES = {
     },
 }
 
+WHITENOISE_MANIFEST_STRICT = False # Evita error 500 si falta una entrada en el manifest
+
 # --- Configuración de Logging ---
 LOGGING = {
     'version': 1,
