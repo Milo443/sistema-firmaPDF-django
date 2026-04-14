@@ -48,7 +48,7 @@ class CustomPasswordResetForm(PasswordResetForm):
     def save(self, domain_override=None, email_template_name=None,
              use_https=False, token_generator=default_token_generator,
              from_email=None, request=None, html_email_template_name=None,
-             extra_email_context=None):
+             extra_email_context=None, **kwargs):
         
         email = self.cleaned_data["email"]
         active_users = self.get_users(email)
