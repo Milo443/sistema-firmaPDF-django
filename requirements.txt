@@ -12,3 +12,5 @@ tzdata==2025.2
 
 django-storages[s3]>=1.14.1
 boto3==1.34.0
+
+whitenoise==6.8.2
