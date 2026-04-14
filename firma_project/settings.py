@@ -178,6 +178,26 @@ UNFOLD = {
     },
 }
 
+# --- Configuración de Almacenamiento MinIO (S3) ---
+AWS_ACCESS_KEY_ID = os.getenv('MINIO_ACCESS_KEY')
+AWS_SECRET_ACCESS_KEY = os.getenv('MINIO_SECRET_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('MINIO_STORAGE_BUCKET_NAME', 'sistema-firmas')
+AWS_S3_ENDPOINT_URL = os.getenv('MINIO_ENDPOINT', 'https://cdn.vooltlab.com')
+AWS_S3_REGION_NAME = None  # Minio no usa regiones estilo AWS
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None # Recomendado para la mayoría de configuraciones de MinIO
+AWS_S3_VERIFY = True # Usar HTTPS verificado
+
+# Configuración de STORAGES (Django 4.2+)
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 # --- Configuración de Logging ---
 LOGGING = {
     'version': 1,
