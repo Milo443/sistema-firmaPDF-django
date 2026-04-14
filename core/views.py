@@ -58,7 +58,7 @@ def rasterize_pdf(input_stream, output_stream, dpi=200):
 # --- Vistas principales ---
 @login_required
 def dashboard(request):
-    user_documents = Document.objects.filter(owner=request.user).order_by('-created_at')
+    user_documents = Document.objects.filter(owner=request.user, is_active=True).order_by('-created_at')
     context = {
         'documents': user_documents
     }
@@ -297,14 +297,9 @@ def login_redirect_view(request):
 def delete_document(request, pk):
     try:
         document = get_object_or_404(Document, pk=pk, owner=request.user)
-        # Opcional: Eliminar archivos físicos del almacenamiento si se desea
-        # Con django-storages S3, esto llamará al borrado en el bucket
-        if document.original_file:
-            document.original_file.delete(save=False)
-        if document.signed_file:
-            document.signed_file.delete(save=False)
-            
-        document.delete()
+        # Eliminación lógica (Soft Delete)
+        document.is_active = False
+        document.save()
         return JsonResponse({'status': 'success', 'message': 'Documento eliminado correctamente.'})
     except Exception as e:
         logger.error(f"Error al eliminar documento: {e}")
