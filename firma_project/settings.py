@@ -38,9 +38,12 @@ USE_X_FORWARDED_HOST = True
 # Seguridad de Cookies para HTTPS
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_HTTPONLY debe ser False (valor por defecto) para que el
+# middleware de Django pueda leer el token desde la cookie en el login.
+CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_HTTPONLY = True
-CSRF_USE_SESSIONS = True
+# NO usar CSRF_USE_SESSIONS=True: el usuario no tiene sesión activa
+# al llegar a /accounts/login/, lo que genera tokens incorrectos.
 
 
 # Application definition
