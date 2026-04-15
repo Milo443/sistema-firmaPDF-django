@@ -203,6 +203,11 @@ def api_save_signature(request, pk):
         with signature.image.open('rb') as f:
             img = Image.open(f)
             rotated_img = img.rotate(-data['rotation'], expand=True, resample=Image.Resampling.BICUBIC)
+            
+            # Obtener dimensiones reales de la imagen procesada (importante si expand=True cambió el tamaño)
+            actual_w, actual_h = rotated_img.size
+            img_aspect_ratio = actual_w / actual_h
+            
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
                 rotated_img.save(temp_img, "PNG")
                 temp_image_path = temp_img.name
@@ -217,13 +222,21 @@ def api_save_signature(request, pk):
             # Conversión de coordenadas
             pdf_width = page.rect.width
             pdf_height = page.rect.height
+            
+            # Ratios para posicionamiento
             x_ratio = pdf_width / data['page_width']
             y_ratio = pdf_height / data['page_height']
+            
             x = data['x'] * x_ratio
             y = data['y'] * y_ratio
-            width = data['width'] * x_ratio
-            height = data['height'] * y_ratio
-            signature_rect = fitz.Rect(x, y, x + width, y + height)
+            
+            # Para las dimensiones (width/height), usamos x_ratio como escala base
+            # y recalculamos el alto según la proporción real de la imagen rotada.
+            # Esto evita que la firma se vea "estirada" o "aplastada".
+            width_in_pdf = data['width'] * x_ratio
+            height_in_pdf = width_in_pdf / img_aspect_ratio
+            
+            signature_rect = fitz.Rect(x, y, x + width_in_pdf, y + height_in_pdf)
             page.insert_image(signature_rect, filename=temp_image_path)
             
             # Obtener los bytes del PDF modificado directamente desde la memoria
