@@ -8,6 +8,9 @@ import logging
 # Inicializar logger
 logger = logging.getLogger('core')
 
+import io
+from rembg import remove
+
 from PIL import Image
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
@@ -110,6 +113,30 @@ def manage_signature(request):
         form = SignatureForm(request.POST, request.FILES, instance=user_signature)
         if form.is_valid():
             signature = form.save(commit=False)
+            
+            # --- Procesamiento con rembg para quitar el fondo ---
+            try:
+                # Abrir la imagen subida
+                input_image = Image.open(request.FILES['image'])
+                
+                # Remover fondo usando IA
+                output_image = remove(input_image)
+                
+                # Guardar el resultado en un buffer de memoria como PNG
+                buffer = io.BytesIO()
+                output_image.save(buffer, format='PNG')
+                buffer.seek(0)
+                
+                # Asignar la imagen procesada al campo ImageField
+                # Esto sobreescribe la imagen original con la versión transparente
+                file_name = f"signature_{request.user.id}.png"
+                signature.image.save(file_name, ContentFile(buffer.read()), save=False)
+                
+                logger.info(f"Firma procesada exitosamente con rembg para el usuario {request.user.username}")
+            except Exception as e:
+                logger.error(f"Error al procesar la firma con rembg: {e}", exc_info=True)
+                # En caso de error, el flujo continúa con la imagen original subida por el usuario
+            
             signature.user = request.user
             signature.save()
             return redirect('dashboard')
