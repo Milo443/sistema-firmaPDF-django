@@ -183,7 +183,23 @@
         ]).then(([pdf, imageNode]) => {
             pdfDoc = pdf;
             signatureImageNode = imageNode;
-            signatureImageNode.setAttrs({ x: 50, y: 50, width: 150, height: 75, draggable: true });
+            
+            // Calcular relación de aspecto original para evitar que la firma se vea "aplastada"
+            const originalWidth = imageNode.width();
+            const originalHeight = imageNode.height();
+            const aspectRatio = originalWidth / originalHeight;
+            
+            // Definir un ancho inicial estándar (150px) y calcular el alto proporcional
+            const initWidth = 150;
+            const initHeight = initWidth / aspectRatio;
+
+            signatureImageNode.setAttrs({ 
+                x: 50, 
+                y: 50, 
+                width: initWidth, 
+                height: initHeight, 
+                draggable: true 
+            });
             
             transformerNode = new Konva.Transformer({ 
                 node: signatureImageNode, 
