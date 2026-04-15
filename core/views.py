@@ -127,9 +127,12 @@ def manage_signature(request):
                 output_image.save(buffer, format='PNG')
                 buffer.seek(0)
                 
-                # Asignar la imagen procesada al campo ImageField
-                # Esto sobreescribe la imagen original con la versión transparente
-                file_name = f"signature_{request.user.id}.png"
+                # Asignar la imagen procesada al campo ImageField con un nombre único (timestamp)
+                # Esto evita problemas de caché en el navegador y conflictos en el storage
+                import time
+                timestamp = int(time.time())
+                file_name = f"signature_{request.user.id}_{timestamp}.png"
+                
                 signature.image.save(file_name, ContentFile(buffer.read()), save=False)
                 
                 logger.info(f"Firma procesada exitosamente con rembg para el usuario {request.user.username}")
