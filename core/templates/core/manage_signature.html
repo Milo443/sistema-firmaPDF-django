@@ -46,7 +46,7 @@
                         class="flex justify-center p-8 bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-inner overflow-hidden relative transparency-grid"
                         :class="{ 'border-primary-400/30' : hover }"
                     >
-                        <img src="{{ user_signature.image.url }}" alt="Firma actual" class="max-h-32 w-auto object-contain transition-transform duration-500 relative z-10" :class="{ 'scale-110' : hover }">
+                        <img src="{% url 'api_signature_proxy' %}" alt="Firma actual" class="max-h-32 w-auto object-contain transition-transform duration-500 relative z-10" :class="{ 'scale-110' : hover }">
                         <div class="absolute inset-0 bg-primary-600/5 backdrop-blur-[2px] opacity-0 transition-opacity duration-300 pointer-events-none z-20" :class="{ 'opacity-100' : hover }"></div>
                     </div>
                 </div>
