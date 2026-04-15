@@ -109,7 +109,7 @@ def manage_signature(request):
         user_signature = None
 
     if request.method == 'POST':
-        #solo formato png
+        # Se permiten formatos PNG, JPG y JPEG (rembg procesará el fondo)
         form = SignatureForm(request.POST, request.FILES, instance=user_signature)
         if form.is_valid():
             signature = form.save(commit=False)
