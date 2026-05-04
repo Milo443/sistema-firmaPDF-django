@@ -4,6 +4,7 @@ import tempfile
 import os
 import traceback
 import logging
+import hashlib
 
 # Inicializar logger
 logger = logging.getLogger('core')
@@ -293,6 +294,7 @@ def api_rasterize_document(request, pk):
             
         # --- Actualizar el estado del documento a 'flattened' ---
         document.status = 'flattened'
+        document.sha256_hash = generate_sha256(document)
         document.save()
             
         return JsonResponse({
@@ -331,6 +333,7 @@ def api_flatten_original(request, pk):
             
         # Actualiza el estado del documento
         document.status = 'flattened_original'
+        document.sha256_hash = generate_sha256(document)
         document.save()
             
         return JsonResponse({
@@ -415,3 +418,15 @@ def api_document_proxy(request, pk):
     except Exception as e:
         logger.error(f"Error en proxy de documento: {e}")
         raise Http404("Archivo de documento no encontrado")
+
+
+def generate_sha256(document):
+    """
+    Genera el hash SHA-256 del documento firmado o aplanado.
+    """
+    sha256_hash = hashlib.sha256()
+    # Usamos .open() para compatibilidad con diferentes tipos de almacenamiento (Local, S3, etc.)
+    with document.signed_file.open("rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()

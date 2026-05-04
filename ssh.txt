@@ -1,0 +1,10 @@
+51.79.55.23
+ubuntu
+3duc4c10n
+
+directorio del poeyecto en ubuntu 
+/home/ubuntu/sistema-firmaPDF/
+
+
+ID contenedor en docker
+342094a5182e   milo443/firma-pdf:latest              "gunicorn --bind 0.0…"   2 weeks ago    Up 2 weeks              0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp                                                          firma-pdf-django

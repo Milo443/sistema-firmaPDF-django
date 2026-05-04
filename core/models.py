@@ -23,6 +23,7 @@ class Document(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='uploaded')
+    sha256_hash = models.CharField(max_length=64, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
