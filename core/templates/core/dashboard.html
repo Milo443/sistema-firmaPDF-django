@@ -51,7 +51,7 @@
             {% for document in documents %}
                 <div 
                     class="glass-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-300 hover:shadow-2xl group border-l-4"
-                    :class="{% if document.status == 'flattened' or document.status == 'signed' %}'border-emerald-500'{% else %}'border-amber-500'{% endif %}"
+                    :class="{% if document.status == 'flattened' or document.status == 'signed' or document.status == 'flattened_original' %}'border-emerald-500'{% else %}'border-amber-500'{% endif %}"
                     x-show="loaded"
                     x-transition:enter="transition ease-out duration-500"
                     x-transition:enter-start="opacity-0 translate-y-8"
@@ -65,8 +65,8 @@
                         <div>
                             <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ document.title }}</h3>
                             <div class="flex flex-wrap items-center gap-4 text-sm">
-                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider {% if document.status == 'flattened' or document.status == 'signed' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400{% else %}bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400{% endif %}">
-                                    <span class="w-1.5 h-1.5 rounded-full {% if document.status == 'flattened' or document.status == 'signed' %}bg-emerald-500{% else %}bg-amber-500 animation-pulse{% endif %}"></span>
+                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider {% if document.status == 'flattened' or document.status == 'signed' or document.status == 'flattened_original' %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400{% else %}bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400{% endif %}">
+                                    <span class="w-1.5 h-1.5 rounded-full {% if document.status == 'flattened' or document.status == 'signed' or document.status == 'flattened_original' %}bg-emerald-500{% else %}bg-amber-500 animation-pulse{% endif %}"></span>
                                     {{ document.get_status_display }}
                                 </span>
                                 <span class="text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
@@ -78,7 +78,7 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
-                        {% if document.status == 'flattened' or document.status == 'signed' %}
+                        {% if document.status == 'flattened' or document.status == 'signed' or document.status == 'flattened_original' %}
                             <a href="{% url 'download_signed_document' pk=document.pk %}" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95" download>
                                 <i class="pi pi-download"></i>
                                 <span>Descargar PDF</span>
