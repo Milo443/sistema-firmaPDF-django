@@ -27,6 +27,14 @@
             console.error(err);
             showToast('Error', 'Error de conexión', 'error');
         });
+    },
+    showPreviewModal: false,
+    previewUrl: '',
+    previewTitle: '',
+    openPreview(id, title) {
+        this.previewTitle = title;
+        this.previewUrl = `/document/${id}/preview/`;
+        this.showPreviewModal = true;
     }
 }" x-init="setTimeout(() => loaded = true, 50)">
     {% csrf_token %}
@@ -78,6 +86,16 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
+                        <!-- Botón Previsualizar -->
+                        <button 
+                            @click="openPreview({{ document.pk }}, '{{ document.title|escapejs }}')"
+                            class="flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm transition-all hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                            title="Previsualizar"
+                        >
+                            <i class="pi pi-eye"></i>
+                            <span>Previsualizar</span>
+                        </button>
+
                         {% if document.status == 'flattened' or document.status == 'signed' or document.status == 'flattened_original' %}
                             <a href="{% url 'download_signed_document' pk=document.pk %}" class="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95" download>
                                 <i class="pi pi-download"></i>
@@ -186,6 +204,64 @@
                             Eliminar
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Previsualización de PDF -->
+    <div 
+        x-show="showPreviewModal" 
+        class="fixed inset-0 z-50 overflow-y-auto" 
+        x-cloak
+        style="display: none;"
+    >
+        <!-- Overlay -->
+        <div 
+            x-show="showPreviewModal"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            @click="showPreviewModal = false; previewUrl = ''"
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+        ></div>
+
+        <!-- Content -->
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div 
+                x-show="showPreviewModal"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                class="glass-card max-w-5xl w-full h-[85vh] p-6 shadow-2xl relative flex flex-col"
+            >
+                <!-- Header -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 p-2 rounded-lg">
+                            <i class="pi pi-file-pdf text-lg"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white truncate max-w-md" x-text="previewTitle"></h3>
+                    </div>
+                    <button 
+                        @click="showPreviewModal = false; previewUrl = ''" 
+                        class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    >
+                        <i class="pi pi-times text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Body (IFrame) -->
+                <div class="flex-grow mt-4 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 relative">
+                    <template x-if="previewUrl">
+                        <iframe :src="previewUrl" class="w-full h-full border-0" allow="fullscreen"></iframe>
+                    </template>
                 </div>
             </div>
         </div>

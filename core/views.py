@@ -430,3 +430,28 @@ def generate_sha256(document):
         for byte_block in iter(lambda: f.read(4096), b""):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
+
+
+@login_required
+def view_document_inline(request, pk):
+    """
+    Sirve el documento (firmado si existe, original en caso contrario)
+    con Content-Disposition: inline para permitir la previsualización en el navegador.
+    """
+    document = get_object_or_404(Document, pk=pk, owner=request.user)
+    
+    # Determinar qué archivo usar (firmado si existe en un estado correcto, de lo contrario original)
+    file_to_serve = document.signed_file if (document.signed_file and document.status in ['signed', 'flattened', 'flattened_original']) else document.original_file
+    
+    if not file_to_serve:
+        raise Http404("El documento no tiene un archivo asociado.")
+        
+    try:
+        filename = os.path.basename(file_to_serve.name)
+        with file_to_serve.open('rb') as f:
+            response = HttpResponse(f.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+            return response
+    except Exception as e:
+        logger.error(f"Error en vista inline de documento: {e}")
+        raise Http404("Archivo no encontrado.")

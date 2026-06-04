@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/my-signature/', views.api_signature_proxy, name='api_signature_proxy'),
     path('api/document/<int:pk>/proxy/', views.api_document_proxy, name='api_document_proxy'),
     path('document/<int:pk>/download/', views.download_signed_document, name='download_signed_document'),
+    path('document/<int:pk>/preview/', views.view_document_inline, name='view_document_inline'),
 
     path('redirect-after-login/', views.login_redirect_view, name='login_redirect'),
     
