@@ -165,22 +165,65 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js`;
         }
 
+        function showEditorError(message, isSignatureError = false) {
+            let buttonHtml = '';
+            if (isSignatureError) {
+                buttonHtml = `
+                    <a href="{% url 'manage_signature' %}" class="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary-500/20 active:scale-95 mt-4">
+                        <i class="pi pi-pencil"></i>
+                        <span>Gestionar mi Firma</span>
+                    </a>
+                `;
+            } else {
+                buttonHtml = `
+                    <a href="{% url 'dashboard' %}" class="flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm transition-all hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 mt-4">
+                        <i class="pi pi-home"></i>
+                        <span>Volver al Dashboard</span>
+                    </a>
+                `;
+            }
+
+            pdfContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center text-center p-8 max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-red-500/20 shadow-2xl">
+                    <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-red-500/10">
+                        <i class="pi pi-exclamation-triangle text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Error al cargar el editor</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">${message}</p>
+                    ${buttonHtml}
+                </div>
+            `;
+        }
+
         // Lógica de carga
-        Promise.all([
-            pdfjsLib.getDocument(pdfUrl).promise,
-            new Promise((resolve, reject) => {
-                // Konva.Image.fromURL en v8 acepta solo (url, callback)
-                // sin objeto de opciones como segundo argumento
-                Konva.Image.fromURL(signatureUrl, (imageNode) => {
-                    if (imageNode && imageNode.getClassName && imageNode.getClassName() === 'Image') {
-                        resolve(imageNode);
-                    } else {
-                        reject(new Error("Error al cargar la firma desde Konva"));
-                    }
+        const loadPdf = pdfjsLib.getDocument(pdfUrl).promise.catch(err => {
+            console.error("Error al cargar PDF:", err);
+            throw new Error("No se pudo cargar el archivo PDF del documento. Asegúrate de que el archivo exista en el servidor.");
+        });
+
+        const loadSignature = new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const imageNode = new Konva.Image({
+                    image: img
                 });
-                setTimeout(() => reject(new Error("Timeout cargando firma")), 20000);
-            })
-        ]).then(([pdf, imageNode]) => {
+                resolve(imageNode);
+            };
+            img.onerror = () => {
+                reject(new Error("Tu firma no se encuentra en el servidor (Causa: Archivo no encontrado - Error 404). Por favor, vuelve a subirla para poder firmar."));
+            };
+            img.src = signatureUrl;
+            
+            // Timeout de 20 segundos
+            setTimeout(() => {
+                if (!img.complete) {
+                    reject(new Error("Se agotó el tiempo de espera al cargar el archivo de firma desde el servidor."));
+                }
+            }, 20000);
+        });
+
+        Promise.all([loadPdf, loadSignature])
+        .then(([pdf, imageNode]) => {
             pdfDoc = pdf;
             signatureImageNode = imageNode;
             
@@ -222,6 +265,9 @@
         }).catch(err => {
             showToast('Error', err.message, 'error');
             console.error(err);
+            
+            const isSigError = err.message.toLowerCase().includes("firma");
+            showEditorError(err.message, isSigError);
         });
 
         function renderPage(num) {
