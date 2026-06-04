@@ -20,7 +20,7 @@ from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from .forms import CustomPasswordResetForm
 
 class CustomPasswordResetView(auth_views.PasswordResetView):
@@ -260,7 +260,7 @@ def api_save_signature(request, pk):
         return JsonResponse({
             'status': 'success',
             'message': 'Firma aplicada correctamente.',
-            'download_url': document.signed_file.url,
+            'download_url': reverse('download_signed_document', kwargs={'pk': document.pk}),
             'document_status': document.status
         })
 
@@ -300,7 +300,7 @@ def api_rasterize_document(request, pk):
         return JsonResponse({
             'status': 'success',
             'message': 'Documento rasterizado exitosamente.',
-            'download_url': document.signed_file.url,
+            'download_url': reverse('download_signed_document', kwargs={'pk': document.pk}),
             'document_status': document.status
         })
     
@@ -339,7 +339,7 @@ def api_flatten_original(request, pk):
         return JsonResponse({
             'status': 'success',
             'message': 'Documento original aplanado exitosamente.',
-            'download_url': document.signed_file.url,
+            'download_url': reverse('download_signed_document', kwargs={'pk': document.pk}),
             'document_status': document.status
         })
     
